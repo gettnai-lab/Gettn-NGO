@@ -1400,8 +1400,10 @@
     </style>
   </head>
   <body>
-    <!-- Landing Page Navigation Header -->
-    <header class="landing-nav" id="landing-header">
+    <!-- Wrapper for all landing page elements -->
+    <div id="landing-view">
+      <!-- Landing Page Navigation Header -->
+      <header class="landing-nav" id="landing-header">
       <a href="#" class="landing-nav-logo">
         <div class="brand-icon">GN</div>
         Gettn <span>Ngo</span>
@@ -1826,6 +1828,7 @@
         </div>
       </div>
     </footer>
+    </div>
 
     <!-- Onboarding Form Section -->
     <section id="onboarding-section" style="display: none; min-height: 90vh; padding: 4rem 1.5rem; background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, var(--bg-app) 100%); align-items: center; justify-content: center;">
@@ -2747,6 +2750,8 @@
             if (currentUserData.gettnngo_profile) {
               updateDashboardWithProfile(currentUserData.gettnngo_profile);
               
+              const landingView = document.getElementById('landing-view');
+              if (landingView) landingView.style.display = 'none';
               document.getElementById('hero-section').style.display = 'none';
               document.getElementById('onboarding-section').style.display = 'none';
               document.getElementById('auth-section').style.display = 'none';
@@ -2784,6 +2789,8 @@
         const errorDiv = document.getElementById('onboarding-error');
         if (errorDiv) errorDiv.style.display = 'none';
 
+        const landingView = document.getElementById('landing-view');
+        if (landingView) landingView.style.display = 'none';
         document.getElementById('hero-section').style.display = 'none';
         document.getElementById('app-view').style.display = 'none';
         const onboardingSec = document.getElementById('onboarding-section');
@@ -2827,7 +2834,7 @@
           document.getElementById('app-view').style.display = 'block';
         } else {
           document.getElementById('onboarding-section').style.display = 'none';
-          document.getElementById('hero-section').style.display = 'block';
+          showLandingOnly();
         }
       }
 
@@ -3235,6 +3242,8 @@
         // Update dashboard and switch view
         updateDashboardWithProfile(currentUserData.gettnngo_profile);
         
+        const landingView = document.getElementById('landing-view');
+        if (landingView) landingView.style.display = 'none';
         document.getElementById('hero-section').style.display = 'none';
         document.getElementById('onboarding-section').style.display = 'none';
         document.getElementById('auth-section').style.display = 'none';
@@ -3532,6 +3541,8 @@
       }
 
       function openAuthScreen() {
+        const landingView = document.getElementById('landing-view');
+        if (landingView) landingView.style.display = 'none';
         document.getElementById('hero-section').style.display = 'none';
         document.getElementById('onboarding-section').style.display = 'none';
         document.getElementById('app-view').style.display = 'none';
@@ -3539,6 +3550,8 @@
       }
 
       function showLandingOnly() {
+        const landingView = document.getElementById('landing-view');
+        if (landingView) landingView.style.display = 'block';
         document.getElementById('hero-section').style.display = 'block';
         document.getElementById('onboarding-section').style.display = 'none';
         document.getElementById('auth-section').style.display = 'none';
@@ -6652,8 +6665,50 @@
             courseSelect.value = optCourse;
           }
         }
-        switchTab(tabId);
+
+        // Initialize Guest mode profile if not logged in
+        if (!window.isGuestMode && (!currentUserData || !currentUserData.gettnngo_profile)) {
+          window.isGuestMode = true;
+          currentUserData.name = "Guest Student";
+          currentUserData.dob = "2008-06-15";
+          currentUserData.gettnngo_profile = {
+            name: "Guest Student",
+            location: "Hyderabad",
+            board12th: "TSBIE",
+            marks12th: 88,
+            category: "General",
+            stream: "MPC",
+            preferredCourse: "Computer Science",
+            budget: 8,
+            emailAlertsEnabled: false,
+            alertsSubscribed: []
+          };
+          currentUserData.gettnngo_compareList = [];
+          currentUserData.gettnngo_oddsResults = [];
+          updateDashboardWithProfile(currentUserData.gettnngo_profile);
+          populateLocationFilter();
+          populateOddsColleges();
+          filterColleges();
+          renderCompareTable();
+          filterCourses();
+          renderOddsHistory();
+          updateOddsProfileInfo();
+        }
+
+        const landingView = document.getElementById('landing-view');
+        if (landingView) landingView.style.display = 'none';
+        document.getElementById('hero-section').style.display = 'none';
+        document.getElementById('onboarding-section').style.display = 'none';
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-view').style.display = 'block';
+
+        switchTab(tabId || 'find-colleges');
         triggerSkeletonAndFilter();
+        
+        // Render lucide icons for newly displayed view elements
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
       }
 
       // Toggle display of advanced search panel
