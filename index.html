@@ -2141,6 +2141,8 @@
             return 'Only one popup sign-in request can be processed at a time.';
           case 'auth/popup-blocked':
             return 'The sign-in popup was blocked by your browser. Please allow popups for this website and try again.';
+          case 'auth/operation-not-allowed':
+            return 'auth/operation-not-allowed';
           default:
             return 'An authentication error occurred: ' + code;
         }
@@ -2260,7 +2262,19 @@
           }
         } catch (e) {
           console.error("Auth error:", e);
-          errorDiv.textContent = getAuthErrorMessage(e.code || e.message);
+          const errCode = e.code || e.message;
+          if (errCode === 'auth/operation-not-allowed') {
+            errorDiv.innerHTML = `
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; text-align: left;">
+                <span><strong>Authentication Provider Not Enabled:</strong> The email/password sign-in method is currently disabled in your Firebase Console. Please enable it under <em>Build &gt; Authentication &gt; Sign-in method</em>.</span>
+                <button type="button" onclick="startGuestMode()" style="background-color: #f59e0b; color: white; border: none; border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; width: fit-content; transition: background-color 0.2s; margin-top: 0.25rem; border-bottom: 2px solid #b45309;" onmouseover="this.style.backgroundColor='#d97706'" onmouseout="this.style.backgroundColor='#f59e0b'">
+                  <i data-lucide="user-check" style="width: 14px; height: 14px;"></i> Bypass &amp; Enter Guest Mode (Demo)
+                </button>
+              </div>`;
+            lucide.createIcons();
+          } else {
+            errorDiv.textContent = getAuthErrorMessage(errCode);
+          }
           errorDiv.style.display = 'block';
         }
       }
@@ -2287,7 +2301,19 @@
           } else {
             console.error("Social Sign In error:", e);
           }
-          errorDiv.textContent = getAuthErrorMessage(e.code || e.message);
+          const errCode = e.code || e.message;
+          if (errCode === 'auth/operation-not-allowed') {
+            errorDiv.innerHTML = `
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; text-align: left;">
+                <span><strong>Social Authentication Not Configured:</strong> This social sign-in method is currently disabled or not configured in your Firebase Console. Please enable it under <em>Build &gt; Authentication &gt; Sign-in method</em>.</span>
+                <button type="button" onclick="startGuestMode()" style="background-color: #f59e0b; color: white; border: none; border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; width: fit-content; transition: background-color 0.2s; margin-top: 0.25rem; border-bottom: 2px solid #b45309;" onmouseover="this.style.backgroundColor='#d97706'" onmouseout="this.style.backgroundColor='#f59e0b'">
+                  <i data-lucide="user-check" style="width: 14px; height: 14px;"></i> Bypass &amp; Enter Guest Mode (Demo)
+                </button>
+              </div>`;
+            lucide.createIcons();
+          } else {
+            errorDiv.textContent = getAuthErrorMessage(errCode);
+          }
           errorDiv.style.display = 'block';
         }
       }
