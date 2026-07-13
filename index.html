@@ -874,6 +874,9 @@
             <button type="button" id="auth-toggle-btn" onclick="toggleAuthMode()" style="width: 100%; padding: 0.875rem; background: none; color: var(--color-primary); border: 1px solid var(--color-primary); border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; outline: none;">
               Create an Account
             </button>
+            <button type="button" onclick="startGuestMode()" style="width: 100%; padding: 0.875rem; background-color: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px dashed #f59e0b; border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; outline: none;" onmouseover="this.style.backgroundColor='rgba(245, 158, 11, 0.15)'" onmouseout="this.style.backgroundColor='rgba(245, 158, 11, 0.1)'">
+              <i data-lucide="user-check" style="width: 16px; height: 16px;"></i> Explore as Guest (Demo Mode)
+            </button>
           </div>
         </form>
 
@@ -1578,6 +1581,9 @@
               openAuthScreen();
               window.isLoggingOut = false;
             } else {
+              if (window.isGuestMode) {
+                return;
+              }
               showLandingOnly();
             }
           }
@@ -2017,6 +2023,51 @@
         lucide.createIcons();
       }
 
+      window.isGuestMode = false;
+      function startGuestMode() {
+        window.isGuestMode = true;
+        currentUserData.name = "Guest Student";
+        currentUserData.dob = "2008-06-15";
+        currentUserData.gettnngo_profile = {
+          name: "Guest Student",
+          location: "Hyderabad",
+          board12th: "TSBIE",
+          marks12th: 88,
+          category: "General",
+          stream: "MPC",
+          preferredCourse: "Computer Science",
+          budget: 8,
+          emailAlertsEnabled: false,
+          alertsSubscribed: []
+        };
+        currentUserData.gettnngo_compareList = [];
+        currentUserData.gettnngo_oddsResults = [];
+
+        // Update dashboard and switch view
+        updateDashboardWithProfile(currentUserData.gettnngo_profile);
+        
+        document.getElementById('hero-section').style.display = 'none';
+        document.getElementById('onboarding-section').style.display = 'none';
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-view').style.display = 'block';
+        
+        // Refresh views
+        populateLocationFilter();
+        populateOddsColleges();
+        filterColleges();
+        renderCompareTable();
+        filterCourses();
+        renderOddsHistory();
+        updateOddsProfileInfo();
+        
+        switchTab('dashboard');
+        
+        // Render lucide icons for newly displayed view elements
+        lucide.createIcons();
+
+        showToast("Logged in as Guest! Experience all features in Demo Mode.");
+      }
+
       let isSignUpMode = false;
       function toggleAuthMode() {
         isSignUpMode = !isSignUpMode;
@@ -2243,6 +2294,19 @@
 
       async function handleLogOut() {
         if (confirm("Are you sure you want to log out?")) {
+          if (window.isGuestMode) {
+            window.isGuestMode = false;
+            currentUserData = {
+              gettnngo_profile: null,
+              gettnngo_compareList: [],
+              gettnngo_oddsResults: [],
+              name: null,
+              dob: null
+            };
+            openAuthScreen();
+            showToast("Logged out from Demo Mode.");
+            return;
+          }
           window.isLoggingOut = true;
           try {
             await window.signOut(window.auth);
