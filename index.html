@@ -2622,29 +2622,103 @@
             <h2 class="panel-title"><i data-lucide="award" style="color: var(--color-primary)"></i> Scholarships</h2>
             <p class="panel-description">Unlock monetary aid from state schemes, corporate trusts, and individual college scholarships.</p>
           </div>
-          <div class="scaffold-grid">
-            <div class="card" id="scholarship-card-1">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
-                <div class="card-icon-wrapper" style="margin-bottom: 0;">
-                  <i data-lucide="building"></i>
-                </div>
-                <span style="font-size: 0.75rem; font-weight: 700; color: #16a34a; background-color: #f0fdf4; padding: 0.25rem 0.625rem; border-radius: 9999px;">Up to 100% Aid</span>
+
+          <!-- Matching Profile Bar -->
+          <div style="background-color: var(--color-primary-light); border: 1px solid rgba(37, 99, 235, 0.15); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div style="width: 36px; height: 36px; border-radius: 50%; background-color: rgba(37, 99, 235, 0.1); color: var(--color-primary); display: flex; align-items: center; justify-content: center;">
+                <i data-lucide="user-check" style="width: 18px; height: 18px;"></i>
               </div>
-              <h3 class="card-title">National Scholarship Portal (NSP)</h3>
-              <p class="card-text">Central government educational support structures matching multiple economic brackets.</p>
-              <span class="coming-soon-badge"><i data-lucide="clock"></i> Coming Soon</span>
-            </div>
-            <div class="card" id="scholarship-card-2">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem;">
-                <div class="card-icon-wrapper accent" style="margin-bottom: 0;">
-                  <i data-lucide="award"></i>
+              <div>
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--color-primary-dark); text-transform: uppercase; letter-spacing: 0.05em;">Your Dynamic Profile</div>
+                <div style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary);" id="sch-profile-summary">
+                  Marks: <span id="sch-profile-marks">--</span>% | Exam: <span id="sch-profile-exam">--</span> | Location: <span id="sch-profile-location">--</span>
                 </div>
-                <span style="font-size: 0.75rem; font-weight: 700; color: #16a34a; background-color: #f0fdf4; padding: 0.25rem 0.625rem; border-radius: 9999px;">Merit Grants</span>
               </div>
-              <h3 class="card-title">Private Trust Fellowships</h3>
-              <p class="card-text">Special corporate grants for outstanding performers in science, commerce, and creative arts.</p>
-              <span class="coming-soon-badge accent"><i data-lucide="clock"></i> Coming Soon</span>
             </div>
+            <button onclick="switchTab('dashboard')" style="background-color: white; border: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8125rem; font-weight: 700; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; gap: 0.375rem; transition: all 0.2s;" onmouseover="this.style.backgroundColor='var(--bg-app)'" onmouseout="this.style.backgroundColor='white'">
+              <i data-lucide="edit" style="width: 14px; height: 14px;"></i>
+              <span>Edit Profile</span>
+            </button>
+          </div>
+
+          <!-- Advanced Filters Controls -->
+          <div class="card" style="padding: 1.5rem; margin-bottom: 2rem; border-radius: var(--radius-md); background-color: var(--bg-card); border-color: var(--border-color);">
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <!-- Search Input -->
+                <div style="flex: 2; min-width: 260px; position: relative;">
+                  <i data-lucide="search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px;"></i>
+                  <input type="text" id="sch-search-input" placeholder="Search by scholarship name, state, or provider..." oninput="renderScholarships()" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
+                </div>
+                <!-- Filter by Type -->
+                <div style="flex: 1; min-width: 160px;">
+                  <select id="sch-filter-type" onchange="renderScholarships()" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; background-color: var(--bg-app); color: var(--text-primary); outline: none;">
+                    <option value="All">All Scheme Types</option>
+                    <option value="State">State Gov Schemes</option>
+                    <option value="Central">Central Gov Schemes</option>
+                    <option value="Private">Private Corporate/Trust</option>
+                  </select>
+                </div>
+                <!-- Filter by Gender Constraint -->
+                <div style="flex: 1; min-width: 160px;">
+                  <select id="sch-filter-gender" onchange="renderScholarships()" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; background-color: var(--bg-app); color: var(--text-primary); outline: none;">
+                    <option value="All">All Genders</option>
+                    <option value="Open">Open to All</option>
+                    <option value="Girls">Girls Only</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Extra Filters & Checkbox Toggle -->
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-top: 1px dashed var(--border-color); padding-top: 1.25rem;">
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                  <!-- Custom States Dropdown -->
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary);">State Domain:</span>
+                    <select id="sch-filter-state" onchange="renderScholarships()" style="padding: 0.375rem 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.8125rem; background-color: var(--bg-app); color: var(--text-primary); outline: none;">
+                      <option value="All">All States / National</option>
+                      <option value="Telangana">Telangana</option>
+                      <option value="Andhra Pradesh">Andhra Pradesh</option>
+                      <option value="National">National Only</option>
+                    </select>
+                  </div>
+                  <!-- Category Dropdown -->
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary);">Caste Category:</span>
+                    <select id="sch-filter-category" onchange="renderScholarships()" style="padding: 0.375rem 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.8125rem; background-color: var(--bg-app); color: var(--text-primary); outline: none;">
+                      <option value="All">All Categories</option>
+                      <option value="General">General</option>
+                      <option value="OBC">OBC</option>
+                      <option value="SC">SC</option>
+                      <option value="ST">ST</option>
+                      <option value="Minority">Minority</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Match Eligibility Toggle -->
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 700; color: var(--text-primary); cursor: pointer; user-select: none;">
+                  <input type="checkbox" id="sch-match-toggle" onchange="renderScholarships()" style="width: 1.125rem; height: 1.125rem; accent-color: var(--color-primary);" />
+                  <span>Show only eligible for my marks (<span id="sch-match-marks-lbl">--</span>%)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scholarship Cards Output Grid -->
+          <div class="scaffold-grid" id="scholarships-dynamic-grid">
+            <!-- Rendered Dynamically by javascript -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="scholarships-empty-state" style="display: none; text-align: center; padding: 4rem 2rem; background-color: var(--bg-card); border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background-color: var(--bg-app); color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+              <i data-lucide="award" style="width: 28px; height: 28px;"></i>
+            </div>
+            <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">No Matching Scholarships Found</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); max-width: 400px; margin: 0 auto 1.5rem auto;">Try loosening your filters, changing your category/state filter, or expanding your search terms.</p>
+            <button onclick="resetScholarshipFilters()" class="btn-primary" style="padding: 0.625rem 1.25rem; font-size: 0.875rem; border-radius: var(--radius-sm);">Reset All Filters</button>
           </div>
         </section>
 
@@ -7371,7 +7445,553 @@
             updateOddsProfileInfo();
             populateOddsColleges();
             renderOddsHistory();
+          } else if (tabId === 'scholarships') {
+            renderScholarships();
           }
+        }
+      }
+
+      // ==========================================
+      // SCHOLARSHIPS CENTER SYSTEM (DYNAMIC DATA)
+      // ==========================================
+
+      const scholarshipsDataset = [
+        {
+          id: "sch-1",
+          name: "TS ePASS Fee Reimbursement Scheme",
+          provider: "Government of Telangana (Department of Backward Classes Welfare)",
+          type: "State", // State | Central | Private
+          state: "Telangana",
+          benefit: "Full or Partial Tuition Waiver",
+          description: "Provides complete tuition fee reimbursement for SC/ST students, and up to ₹35,000 to ₹1.1 Lakh per annum for BC/EBC/Minority categories in professional courses.",
+          marksRequired: 50,
+          categoryRequired: ["SC", "ST", "OBC", "Minority", "BC-A", "BC-B", "BC-C", "BC-D", "BC-E", "EBC"],
+          genderRequired: "All", // All | Girls
+          incomeLimit: 2.0, // in Lakhs
+          requiredDocs: [
+            "Domicile / Residential Certificate of Telangana",
+            "Caste Certificate issued by Meeseva",
+            "Income Certificate issued after April 1st of current year",
+            "12th Marks Memo / SSC Marks Card",
+            "Aadhaar Card copy linked with Bank Account"
+          ],
+          steps: [
+            "Visit the official TS ePASS Portal (telanganaepass.cgg.gov.in).",
+            "Click on 'Postmatric Scholarships' and select 'New Registration'.",
+            "Enter details matching your SSC Hall Ticket, Aadhaar, Caste, and Income Certificates.",
+            "Upload scanned copies of required documents in PDF format.",
+            "Submit the application and download the generated application acknowledgment receipt.",
+            "Submit the physical copy along with original documents to your college scholarship officer."
+          ]
+        },
+        {
+          id: "sch-2",
+          name: "AP Jagananna Vidya Deevena",
+          provider: "Government of Andhra Pradesh",
+          type: "State",
+          state: "Andhra Pradesh",
+          benefit: "100% Complete Tuition Reimbursement",
+          description: "Full tuition fee reimbursement credited directly to the mother's bank account in quarterly installments for students pursuing professional courses.",
+          marksRequired: 50,
+          categoryRequired: ["SC", "ST", "OBC", "Minority", "BC", "EBC", "Kapu"],
+          genderRequired: "All",
+          incomeLimit: 2.5,
+          requiredDocs: [
+            "Residential Proof of Andhra Pradesh",
+            "Integrated Caste Certificate",
+            "Income Certificate or Rice Card copy",
+            "Aadhaar card of both Student and Mother",
+            "College Admission Letter & 12th Board marks memo"
+          ],
+          steps: [
+            "Register or log in on the Jnanabhumi Portal (jnanabhumi.ap.gov.in).",
+            "Ensure biometric authentication is updated at the local Grama/Ward Sachivalayam.",
+            "Submit academic and personal details under 'Post Matric Scholarships'.",
+            "Fill in mother's bank details for direct benefit transfers.",
+            "Your submitted application will be verified online by the college principal first, followed by Welfare Department officers."
+          ]
+        },
+        {
+          id: "sch-3",
+          name: "AICTE Pragati Scholarship for Girls",
+          provider: "All India Council for Technical Education (AICTE)",
+          type: "Central",
+          state: "National",
+          benefit: "₹50,000 Per Annum cash grant",
+          description: "Empowers girl students pursuing professional technical degrees. Covers 10,000 new scholars annually with a direct-to-bank grant.",
+          marksRequired: 60,
+          categoryRequired: ["General", "OBC", "SC", "ST", "Minority"],
+          genderRequired: "Girls",
+          incomeLimit: 8.0,
+          requiredDocs: [
+            "10th and 12th standard Marks Memorandums",
+            "Annual Family Income Certificate issued by competent authority",
+            "Admission proof (allotment letter) into AICTE approved college",
+            "Declaration by parent stating only one/two girls in family",
+            "Student bank account passbook copy linked with Aadhaar"
+          ],
+          steps: [
+            "Navigate to the National Scholarship Portal (scholarships.gov.in).",
+            "Register as a new user and search for 'Pragati Scholarship Scheme' under AICTE category.",
+            "Fill in application form sections detailing your professional technical course details.",
+            "Provide bank details and upload mandatory family count declaration.",
+            "Submit and print for your record. Institutional verification is done automatically by college portal."
+          ]
+        },
+        {
+          id: "sch-4",
+          name: "National Merit-cum-Means Scholarship",
+          provider: "Ministry of Education, Govt of India",
+          type: "Central",
+          state: "National",
+          benefit: "₹12,000 Per Annum Cash Grant",
+          description: "Financial assistance to students from economically weaker sections to prevent dropouts and encourage professional university education.",
+          marksRequired: 55,
+          categoryRequired: ["General", "OBC", "SC", "ST", "Minority"],
+          genderRequired: "All",
+          incomeLimit: 3.5,
+          requiredDocs: [
+            "Self-attested 12th Board Pass Certificate",
+            "Official Income declaration certificate",
+            "Caste verification certificate (where applicable)",
+            "Aadhaar card and local Bank account proof"
+          ],
+          steps: [
+            "Log in to the National Scholarship Portal (NSP) during August - November.",
+            "Enter details of current admission and previous academic board performance.",
+            "Upload income proof showing family earnings are within specified thresholds.",
+            "Verify all details and submit the application for state-level nodal scrutiny."
+          ]
+        },
+        {
+          id: "sch-5",
+          name: "Kotak Kanya Scholarship Program",
+          provider: "Kotak Education Foundation",
+          type: "Private",
+          state: "National",
+          benefit: "Up to ₹1.5 Lakhs Per Year for Tuition",
+          description: "Generous educational scholarship for meritorious female students to pursue graduation or professional courses in top-ranked institutions.",
+          marksRequired: 85,
+          categoryRequired: ["General", "OBC", "SC", "ST", "Minority"],
+          genderRequired: "Girls",
+          incomeLimit: 6.0,
+          requiredDocs: [
+            "Passport size photograph",
+            "Class 12th Marks sheet",
+            "Parents' Income Certificate / ITR / Pay Slip copy",
+            "College Fee receipt & structured Fee estimation certificate",
+            "Aadhaar card copy"
+          ],
+          steps: [
+            "Apply online through the Kotak Education Foundation partner portals (e.g. Buddy4Study).",
+            "Complete the profile registration and write a short essay on career goals.",
+            "Upload mandatory documents verifying income and high marks performance.",
+            "Shortlisted candidates will undergo a friendly telephonic interview and subsequent document audit."
+          ]
+        },
+        {
+          id: "sch-6",
+          name: "Reliance Foundation Undergraduate Scholarship",
+          provider: "Reliance Foundation",
+          type: "Private",
+          state: "National",
+          benefit: "Up to ₹2 Lakhs over total degree course",
+          description: "Supports meritorious students across diverse fields of study. Selection is based on merit, economic need, and an online aptitude assessment.",
+          marksRequired: 60,
+          categoryRequired: ["General", "OBC", "SC", "ST", "Minority"],
+          genderRequired: "All",
+          incomeLimit: 15.0,
+          requiredDocs: [
+            "10th and 12th standard marksheets",
+            "Family income certificate",
+            "Identity and residence proof",
+            "Self-declaration form detailing academic plans"
+          ],
+          steps: [
+            "Register on the Reliance Foundation Portal during active campaign windows.",
+            "Fill in personal background information and academic history.",
+            "Complete the mandatory 60-minute online cognitive and analytical aptitude test.",
+            "Submit required income and academic documents for matching verification."
+          ]
+        },
+        {
+          id: "sch-7",
+          name: "Central Sector Scheme for University Students",
+          provider: "Department of Higher Education, Govt of India",
+          type: "Central",
+          state: "National",
+          benefit: "₹12,000 / Yr for UG & ₹20,000 / Yr for PG",
+          description: "Granted to university students who score above the 80th percentile in their respective 12th board exams and are pursuing regular non-professional or professional courses.",
+          marksRequired: 80,
+          categoryRequired: ["General", "OBC", "SC", "ST"],
+          genderRequired: "All",
+          incomeLimit: 4.5,
+          requiredDocs: [
+            "Class 12th Board marks list showing top 80th percentile rank",
+            "Family Income Certificate from local revenue authority",
+            "Aadhaar card and Bank Account passbook"
+          ],
+          steps: [
+            "Apply via National Scholarship Portal (NSP).",
+            "Choose 'Central Sector Scheme of Scholarship for College and University Students'.",
+            "Ensure the roll number entered matches the 12th Board Database on NSP.",
+            "Submit and obtain confirmation which is then verified online by college and state nodal authorities."
+          ]
+        },
+        {
+          id: "sch-8",
+          name: "HDFC Bank Badhte Kadam Scholarship",
+          provider: "HDFC Bank (CSR Initiative)",
+          type: "Private",
+          state: "National",
+          benefit: "₹30,000 to ₹1,00,000 Annual Grant",
+          description: "Aims to support students in difficult economic situations, including those facing sudden loss of earning parents, ensuring their professional studies are uninterrupted.",
+          marksRequired: 60,
+          categoryRequired: ["General", "OBC", "SC", "ST", "Minority"],
+          genderRequired: "All",
+          incomeLimit: 6.0,
+          requiredDocs: [
+            "Previous class marksheet (12th Board)",
+            "Family income proof (Salary slip / ITR / Municipal certificate)",
+            "Proof of crisis (if applicable, like death certificate of primary earner)",
+            "College fee structure and admission receipt"
+          ],
+          steps: [
+            "Submit digital forms via Buddy4Study portal.",
+            "Upload proof of financial difficulties and standard school transcripts.",
+            "Await review of application. High priority is awarded to orphans or crisis-hit family units.",
+            "Selected scholars receive funds directly in their verified student bank account."
+          ]
+        },
+        {
+          id: "sch-9",
+          name: "ONGC Merit Scholarship",
+          provider: "ONGC Foundation",
+          type: "Private",
+          state: "National",
+          benefit: "₹48,000 Per Annum Direct Cash Support",
+          description: "Awarded to 2,000 under-represented category students (SC/ST/OBC and General-EWS) pursuing full-time Professional Engineering (BE/BTech) or MBBS programs.",
+          marksRequired: 60,
+          categoryRequired: ["SC", "ST", "OBC", "General"],
+          genderRequired: "All",
+          incomeLimit: 4.5,
+          requiredDocs: [
+            "Caste certificate signed by competent officer",
+            "Marks card of 12th class",
+            "Annual family income certificate",
+            "Proof of admission (JEE Mains rank / College Allotment memo)"
+          ],
+          steps: [
+            "Register on the ONGC Foundation Portal (ongcfoundation.org).",
+            "Fill in academic scores and upload documents verifying reservation category.",
+            "Provide college principal's certificate testifying regular full-time enrollment.",
+            "A merit list is drawn up based on academic points, and cash grants are dispatched yearly."
+          ]
+        }
+      ];
+
+      // State management for Scholarship details modal
+      let activeScholarshipForModal = null;
+
+      function renderScholarships() {
+        const grid = document.getElementById('scholarships-dynamic-grid');
+        const emptyState = document.getElementById('scholarships-empty-state');
+        if (!grid) return;
+
+        // Retrieve search and filters values
+        const searchVal = (document.getElementById('sch-search-input')?.value || '').trim().toLowerCase();
+        const filterType = document.getElementById('sch-filter-type')?.value || 'All';
+        const filterGender = document.getElementById('sch-filter-gender')?.value || 'All';
+        const filterState = document.getElementById('sch-filter-state')?.value || 'All';
+        const filterCategory = document.getElementById('sch-filter-category')?.value || 'All';
+        const matchEligibility = document.getElementById('sch-match-toggle')?.checked || false;
+
+        // Retrieve current active profile details
+        const profile = (currentUserData && currentUserData.gettnngo_profile) || {
+          percentage: 0,
+          marks12th: 85,
+          exam: '12th Boards',
+          location: 'Telangana',
+          interests: [],
+          budget: 8,
+          category: 'General'
+        };
+
+        const marks = parseFloat(profile.percentage) || parseFloat(profile.marks12th) || 0;
+        const studentCategory = (profile.category || 'General').toUpperCase();
+        const studentState = (profile.location || 'Telangana').toLowerCase();
+
+        // Update labels on top status bar
+        const marksLbl = document.getElementById('sch-profile-marks');
+        const examLbl = document.getElementById('sch-profile-exam');
+        const locLbl = document.getElementById('sch-profile-location');
+        const matchMarksLbl = document.getElementById('sch-match-marks-lbl');
+
+        if (marksLbl) marksLbl.textContent = marks;
+        if (examLbl) examLbl.textContent = profile.exam || '12th Boards';
+        if (locLbl) locLbl.textContent = profile.location || 'Telangana';
+        if (matchMarksLbl) matchMarksLbl.textContent = marks;
+
+        // Filter the dataset
+        const filtered = scholarshipsDataset.filter(sch => {
+          // 1. Search filter
+          const matchesSearch = !searchVal || 
+            sch.name.toLowerCase().includes(searchVal) ||
+            sch.provider.toLowerCase().includes(searchVal) ||
+            sch.description.toLowerCase().includes(searchVal) ||
+            sch.state.toLowerCase().includes(searchVal);
+
+          // 2. Type filter
+          const matchesType = filterType === 'All' || sch.type === filterType;
+
+          // 3. Gender filter
+          const matchesGender = filterGender === 'All' || 
+            (filterGender === 'Open' && sch.genderRequired === 'All') ||
+            (filterGender === 'Girls' && sch.genderRequired === 'Girls');
+
+          // 4. State filter
+          const matchesState = filterState === 'All' ||
+            (filterState === 'Telangana' && sch.state.toLowerCase() === 'telangana') ||
+            (filterState === 'Andhra Pradesh' && sch.state.toLowerCase() === 'andhra pradesh') ||
+            (filterState === 'National' && sch.state.toLowerCase() === 'national');
+
+          // 5. Category filter
+          const matchesCategory = filterCategory === 'All' ||
+            sch.categoryRequired.some(cat => cat.toUpperCase().includes(filterCategory.toUpperCase()));
+
+          // 6. Hard Match eligibility filter
+          let matchesEligibility = true;
+          if (matchEligibility) {
+            // Check marks threshold
+            const academicOk = marks >= sch.marksRequired;
+            // Check category matching
+            const categoryOk = sch.categoryRequired.some(cat => {
+              if (cat.toUpperCase() === 'GENERAL') return true;
+              return studentCategory.includes(cat.toUpperCase()) || cat.toUpperCase().includes(studentCategory);
+            });
+
+            matchesEligibility = academicOk && categoryOk;
+          }
+
+          return matchesSearch && matchesType && matchesGender && matchesState && matchesCategory && matchesEligibility;
+        });
+
+        // Display results
+        if (filtered.length === 0) {
+          grid.innerHTML = '';
+          emptyState.style.display = 'block';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+
+        grid.innerHTML = filtered.map(sch => {
+          // Determine eligibility state for UI
+          const marksOk = marks >= sch.marksRequired;
+          const categoryOk = sch.categoryRequired.some(cat => {
+            if (cat.toUpperCase() === 'GENERAL') return true;
+            return studentCategory.includes(cat.toUpperCase()) || cat.toUpperCase().includes(studentCategory);
+          });
+          const stateOk = sch.state.toLowerCase() === 'national' || studentState.includes(sch.state.toLowerCase()) || sch.state.toLowerCase().includes(studentState);
+          
+          const isEligible = marksOk && categoryOk;
+
+          let eligibilityBadgeHtml = '';
+          if (isEligible) {
+            eligibilityBadgeHtml = `<span style="font-size: 0.75rem; font-weight: 700; color: #15803d; background-color: #f0fdf4; border: 1px solid rgba(21, 128, 61, 0.2); padding: 0.25rem 0.625rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.25rem;"><span style="width: 6px; height: 6px; border-radius: 50%; background-color: #15803d;"></span> You Qualify</span>`;
+          } else {
+            let reason = '';
+            if (!marksOk) reason = `Requires ${sch.marksRequired}% Marks`;
+            else if (!categoryOk) reason = `Reserved Category Scheme`;
+            else reason = `Criteria Mismatch`;
+            
+            eligibilityBadgeHtml = `<span style="font-size: 0.75rem; font-weight: 700; color: #b45309; background-color: #fffbeb; border: 1px solid rgba(180, 83, 9, 0.2); padding: 0.25rem 0.625rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.25rem;"><span style="width: 6px; height: 6px; border-radius: 50%; background-color: #d97706;"></span> ${reason}</span>`;
+          }
+
+          const typeColors = sch.type === 'State' ? { bg: '#f0fdfa', border: 'rgba(13, 148, 136, 0.25)', text: '#0d9488', label: 'State Scheme' } :
+                             sch.type === 'Central' ? { bg: '#eff6ff', border: 'rgba(37, 99, 235, 0.2)', text: '#2563eb', label: 'Central Govt' } :
+                             { bg: '#faf5ff', border: 'rgba(147, 51, 234, 0.2)', text: '#9333ea', label: 'Private Trust' };
+
+          return `
+            <div class="card" style="padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between; border-color: ${isEligible ? 'rgba(21, 128, 61, 0.15)' : 'var(--border-color)'};">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; gap: 0.5rem; flex-wrap: wrap;">
+                  <span style="font-size: 0.6875rem; font-weight: 700; color: ${typeColors.text}; background-color: ${typeColors.bg}; border: 1px solid ${typeColors.border}; padding: 0.25rem 0.5rem; border-radius: 4px;">${typeColors.label}</span>
+                  ${eligibilityBadgeHtml}
+                </div>
+                
+                <h3 class="card-title" style="margin-bottom: 0.25rem; line-height: 1.3;">${sch.name}</h3>
+                <p style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 1rem;">Provided by: ${sch.provider}</p>
+                <p class="card-text" style="font-size: 0.875rem; line-height: 1.45; margin-bottom: 1.5rem;">${sch.description}</p>
+              </div>
+
+              <div>
+                <!-- Key criteria indicators -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; background-color: var(--bg-app); padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+                  <div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.125rem;">Min Academic</div>
+                    <div style="font-size: 0.8125rem; font-weight: 700; color: ${marksOk ? 'var(--text-primary)' : '#b45309'}">${sch.marksRequired}% Marks</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.125rem;">Income Limit</div>
+                    <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-primary);"><= ₹${sch.incomeLimit}L / Yr</div>
+                  </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                  <div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase;">Benefit Award</div>
+                    <div style="font-size: 0.9375rem; font-weight: 800; color: #16a34a;">${sch.benefit}</div>
+                  </div>
+                  <button onclick="openScholarshipDetails('${sch.id}')" style="background-color: var(--color-primary-light); color: var(--color-primary-dark); font-weight: 700; border: 1px solid rgba(37, 99, 235, 0.15); font-size: 0.8125rem; padding: 0.5rem 1rem; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; border: none;" onmouseover="this.style.backgroundColor='var(--color-primary)'; this.style.color='white'" onmouseout="this.style.backgroundColor='var(--color-primary-light)'; this.style.color='var(--color-primary-dark)'">
+                    Guide & Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }
+
+      function resetScholarshipFilters() {
+        const input = document.getElementById('sch-search-input');
+        if (input) input.value = '';
+        const type = document.getElementById('sch-filter-type');
+        if (type) type.value = 'All';
+        const gender = document.getElementById('sch-filter-gender');
+        if (gender) gender.value = 'All';
+        const state = document.getElementById('sch-filter-state');
+        if (state) state.value = 'All';
+        const cat = document.getElementById('sch-filter-category');
+        if (cat) cat.value = 'All';
+        const toggle = document.getElementById('sch-match-toggle');
+        if (toggle) toggle.checked = false;
+
+        renderScholarships();
+      }
+
+      function openScholarshipDetails(id) {
+        const sch = scholarshipsDataset.find(s => s.id === id);
+        if (!sch) return;
+
+        activeScholarshipForModal = sch;
+
+        // Populate Modal Fields
+        document.getElementById('sch-modal-title').textContent = sch.name;
+        document.getElementById('sch-modal-provider').textContent = sch.provider;
+        document.getElementById('sch-modal-benefit').textContent = sch.benefit;
+        document.getElementById('sch-modal-description').textContent = sch.description;
+
+        // Generate Criteria Matching list
+        const profile = (currentUserData && currentUserData.gettnngo_profile) || {
+          percentage: 0,
+          marks12th: 85,
+          exam: '12th Boards',
+          location: 'Telangana',
+          interests: [],
+          budget: 8,
+          category: 'General'
+        };
+
+        const marks = parseFloat(profile.percentage) || parseFloat(profile.marks12th) || 0;
+        const studentCategory = (profile.category || 'General').toUpperCase();
+        const studentState = (profile.location || 'Telangana').toLowerCase();
+
+        const marksOk = marks >= sch.marksRequired;
+        const categoryOk = sch.categoryRequired.some(cat => {
+          if (cat.toUpperCase() === 'GENERAL') return true;
+          return studentCategory.includes(cat.toUpperCase()) || cat.toUpperCase().includes(studentCategory);
+        });
+        const stateOk = sch.state.toLowerCase() === 'national' || studentState.includes(sch.state.toLowerCase()) || sch.state.toLowerCase().includes(studentState);
+
+        let criteriaHtml = `
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-app); border-radius: var(--radius-sm); border: 1px solid ${marksOk ? '#bbf7d0' : '#fbcfe8'}">
+              <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary);">Minimum Marks: ${sch.marksRequired}%</span>
+              <span style="font-size: 0.8125rem; font-weight: 700; color: ${marksOk ? '#15803d' : '#be185d'}; display: flex; align-items: center; gap: 0.25rem;">
+                ${marksOk ? '<i data-lucide="check-circle" style="width:16px;height:16px;"></i> Qualified' : '<i data-lucide="alert-triangle" style="width:16px;height:16px;"></i> Gap of ' + (sch.marksRequired - marks).toFixed(1) + '%'}
+              </span>
+            </div>
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-app); border-radius: var(--radius-sm); border: 1px solid ${categoryOk ? '#bbf7d0' : '#fbcfe8'}">
+              <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary);">Category Allowance: ${sch.categoryRequired.join(', ')}</span>
+              <span style="font-size: 0.8125rem; font-weight: 700; color: ${categoryOk ? '#15803d' : '#be185d'}; display: flex; align-items: center; gap: 0.25rem;">
+                ${categoryOk ? '<i data-lucide="check-circle" style="width:16px;height:16px;"></i> Match' : '<i data-lucide="alert-triangle" style="width:16px;height:16px;"></i> Reserved Category'}
+              </span>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background-color: var(--bg-app); border-radius: var(--radius-sm); border: 1px solid ${stateOk ? '#bbf7d0' : '#fde047'}">
+              <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-primary);">Domicile Region: ${sch.state === 'National' ? 'Open to All States (National)' : sch.state}</span>
+              <span style="font-size: 0.8125rem; font-weight: 700; color: ${stateOk ? '#15803d' : '#ca8a04'}; display: flex; align-items: center; gap: 0.25rem;">
+                ${stateOk ? '<i data-lucide="check-circle" style="width:16px;height:16px;"></i> Eligible' : '<i data-lucide="help-circle" style="width:16px;height:16px;"></i> Verification Required'}
+              </span>
+            </div>
+          </div>
+        `;
+        document.getElementById('sch-modal-criteria-matching').innerHTML = criteriaHtml;
+
+        // Generate Required Documents list
+        const docsHtml = sch.requiredDocs.map(doc => {
+          return `
+            <li style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: flex; align-items: flex-start; gap: 0.5rem;">
+              <i data-lucide="file-text" style="width: 16px; height: 16px; color: var(--color-primary); flex-shrink: 0; margin-top: 0.125rem;"></i>
+              <span>${doc}</span>
+            </li>
+          `;
+        }).join('');
+        document.getElementById('sch-modal-docs').innerHTML = docsHtml;
+
+        // Generate Steps list
+        const stepsHtml = sch.steps.map((step, idx) => {
+          return `
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background-color: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0;">
+                ${idx + 1}
+              </div>
+              <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 0; padding-top: 0.125rem;">${step}</p>
+            </div>
+          `;
+        }).join('');
+        document.getElementById('sch-modal-steps').innerHTML = stepsHtml;
+
+        // Show Modal Overlay
+        const modal = document.getElementById('scholarship-details-modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          modal.scrollTop = 0;
+        }
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+      }
+
+      function closeScholarshipModal() {
+        const modal = document.getElementById('scholarship-details-modal');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+        activeScholarshipForModal = null;
+      }
+
+      function handleScholarshipOverlayClick(event) {
+        if (event.target.id === 'scholarship-details-modal') {
+          closeScholarshipModal();
+        }
+      }
+
+      function simulateApply() {
+        const feedback = document.getElementById('sch-apply-feedback');
+        if (feedback) {
+          feedback.style.display = 'flex';
+          feedback.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          setTimeout(() => {
+            feedback.style.display = 'none';
+          }, 6000);
         }
       }
 
@@ -7923,20 +8543,71 @@
       </div>
     </div>
 
-          const feedback = document.getElementById('import-feedback');
-          if (feedback) {
-            feedback.style.display = 'flex';
-            feedback.style.backgroundColor = '#f0fdf4';
-            feedback.style.border = '1px solid #bbf7d0';
-            feedback.style.color = '#15803d';
-            feedback.innerHTML = `
-              <i data-lucide="check-circle" style="width: 14px; height: 14px; flex-shrink: 0; color: #15803d;"></i>
-              <span>Database successfully restored to defaults!</span>
-            `;
-            lucide.createIcons();
-          }
-        }
-      }
-    </script>
+    <!-- SCHOLARSHIP DETAILS MODAL -->
+    <div class="details-modal-overlay" id="scholarship-details-modal" onclick="handleScholarshipOverlayClick(event)">
+      <div class="details-modal-container" style="max-width: 680px; height: auto; max-height: 85vh;">
+        <div style="background-color: var(--color-primary); color: white; padding: 2rem; position: relative;">
+          <button onclick="closeScholarshipModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; width: 36px; height: 36px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.2); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.3)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.2)'"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+          <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; background-color: rgba(255,255,255,0.2); display: inline-block; padding: 0.25rem 0.5rem; border-radius: 4px; margin-bottom: 0.75rem;">Scholarship Application Roadmap</div>
+          <h2 id="sch-modal-title" style="font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem;">Scholarship Title</h2>
+          <p id="sch-modal-provider" style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 0; font-weight: 500;">Provider agency name here</p>
+        </div>
+
+        <div class="details-modal-body" style="padding: 2rem;">
+          <!-- Brief Summary -->
+          <div style="margin-bottom: 1.5rem;">
+            <p id="sch-modal-description" style="font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.5;">Description</p>
+          </div>
+
+          <!-- Highlight Benefit -->
+          <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-size: 0.6875rem; color: #15803d; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Award / Compensation Offer</span>
+              <div id="sch-modal-benefit" style="font-size: 1.25rem; font-weight: 800; color: #15803d;">100% tuition waiver</div>
+            </div>
+            <div style="width: 44px; height: 44px; border-radius: 50%; background-color: rgba(22, 163, 74, 0.1); color: #16a34a; display: flex; align-items: center; justify-content: center;"><i data-lucide="sparkles" style="width: 22px; height: 22px;"></i></div>
+          </div>
+
+          <!-- Tab Selector or grid layout for documents & steps -->
+          <div style="display: grid; grid-template-columns: 1fr; gap: 1.75rem;">
+            <!-- Eligibility Checking status -->
+            <div>
+              <h3 style="font-family: var(--font-display); font-size: 1.125rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.375rem;">Profile Matching Status</h3>
+              <div id="sch-modal-criteria-matching">
+                <!-- matching lists loaded dynamically -->
+              </div>
+            </div>
+
+            <!-- Required Documents -->
+            <div>
+              <h3 style="font-family: var(--font-display); font-size: 1.125rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.375rem;">Required Documents Checklist</h3>
+              <ul id="sch-modal-docs" style="list-style: none; padding-left: 0; margin-bottom: 0;">
+                <!-- list of docs loaded dynamically -->
+              </ul>
+            </div>
+
+            <!-- Application steps -->
+            <div>
+              <h3 style="font-family: var(--font-display); font-size: 1.125rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.375rem;">Step-by-Step Application Roadmap</h3>
+              <div id="sch-modal-steps">
+                <!-- steps loaded dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulate Portal Application -->
+          <div style="border-top: 1px dashed var(--border-color); padding-top: 1.5rem; margin-top: 1.5rem; text-align: center;">
+            <button onclick="simulateApply()" class="btn-primary" style="padding: 0.875rem 2rem; border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 700; width: 100%; display: flex; justify-content: center; align-items: center; gap: 0.5rem; border: none; cursor: pointer;">
+              <i data-lucide="external-link"></i>
+              <span>Initiate Free Assistance Application Guideline</span>
+            </button>
+            <div id="sch-apply-feedback" style="display: none; margin-top: 1rem; padding: 0.75rem; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); color: #1e40af; font-size: 0.8125rem; align-items: center; gap: 0.5rem; animation: slideUpFade 0.2s ease-out; text-align: left;">
+              <i data-lucide="info" style="width: 16px; height: 16px; color: #2563eb; flex-shrink: 0;"></i>
+              <span>Gettn Ngo Scholarship Coordinator will contact you on your registered student credentials to facilitate government document submissions. No further action is required!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
