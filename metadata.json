@@ -1,0 +1,6 @@
+{
+  "name": "Gettn Ngo",
+  "description": "A college and career guidance application designed for Indian 12th-pass students to find the right college, course, and career within their budget.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
