@@ -14,7 +14,7 @@
     <!-- Firebase CDN SDK -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-      import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+      import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signInWithPopup, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
       import { initializeFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
       const firebaseConfig = {
@@ -41,6 +41,7 @@
       window.signInWithPopup = signInWithPopup;
       window.signInWithEmailAndPassword = signInWithEmailAndPassword;
       window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+      window.sendPasswordResetEmail = sendPasswordResetEmail;
       window.signOut = signOut;
       window.onAuthStateChanged = onAuthStateChanged;
       
@@ -1944,92 +1945,388 @@
     </div>
 
     <!-- Onboarding Form Section -->
-    <section id="onboarding-section" style="display: none; min-height: 90vh; padding: 4rem 1.5rem; background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.05) 0%, var(--bg-app) 100%); align-items: center; justify-content: center;">
-      <div class="card onboarding-card">
-        <div style="text-align: center; margin-bottom: 2rem;">
-          <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background-color: rgba(var(--color-primary-rgb), 0.1); color: var(--color-primary); margin-bottom: 1rem;">
-            <i data-lucide="user" style="width: 24px; height: 24px;"></i>
+    <section id="onboarding-section" style="display: none; min-height: 90vh; padding: 3rem 1.5rem; background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.05) 0%, var(--bg-app) 100%); align-items: center; justify-content: center;">
+      <div class="card onboarding-card" style="width: 100%; max-width: 680px; position: relative;">
+        <!-- Step Progress Indicator Header -->
+        <div style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span id="onboarding-step-badge" style="background-color: rgba(var(--color-primary-rgb), 0.1); color: var(--color-primary); font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.625rem; border-radius: 9999px; text-transform: uppercase; tracking: 0.05em;">Step 1 of 5</span>
+              <span id="onboarding-step-autosave" style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="cloud-check" style="width: 13px; height: 13px;"></i> Progress saved</span>
+            </div>
+            <span id="onboarding-step-title" style="font-size: 0.8125rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Personal Information</span>
           </div>
-          <h2 style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Tell Us About Yourself</h2>
-          <p style="font-size: 0.9375rem; color: var(--text-secondary);">Help us customize your budget, college matching, and career roadmap.</p>
+          <!-- Progress Bar -->
+          <div style="width: 100%; height: 6px; background-color: var(--border-color); border-radius: 9999px; overflow: hidden;">
+            <div id="onboarding-progress-bar" style="width: 20%; height: 100%; background-color: var(--color-primary); border-radius: 9999px; transition: width 0.3s ease;"></div>
+          </div>
         </div>
-        
-        <form id="onboarding-form" onsubmit="handleOnboardingSubmit(event)" novalidate>
+
+        <form id="onboarding-form" onsubmit="event.preventDefault();" novalidate>
           <div id="onboarding-error" style="display: none; background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.875rem; font-weight: 500;">
             <!-- Error messages go here -->
           </div>
-          
-          <!-- Exam Dropdown -->
-          <div style="margin-bottom: 1.25rem;">
-            <label for="profile-exam" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Class / Exam Appeared *</label>
-            <select id="profile-exam" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;">
-              <option value="12th Boards">12th Boards</option>
-              <option value="Diploma">Diploma</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
 
-          <!-- Percentage / Marks -->
-          <div style="margin-bottom: 1.25rem;">
-            <label for="profile-percentage" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Percentage / Marks (0-100) *</label>
-            <input type="number" id="profile-percentage" min="0" max="100" step="0.1" placeholder="e.g. 85.5" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" required />
-          </div>
+          <!-- ==========================================
+               STEP 1: PERSONAL DETAILS
+               ========================================== -->
+          <div class="onboarding-step-pane" id="onboarding-pane-1">
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Let's get to know you</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Tell us a bit about yourself to secure your customized admissions and guidance roadmap.</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label for="onboarding-first-name" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">First Name *</label>
+                <input type="text" id="onboarding-first-name" placeholder="John" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+              </div>
+              <div>
+                <label for="onboarding-last-name" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Last Name *</label>
+                <input type="text" id="onboarding-last-name" placeholder="Doe" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+              </div>
+            </div>
 
-          <!-- Subject Interests -->
-          <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Subject Interests * <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-secondary);">(Select at least one)</span></label>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                <input type="checkbox" name="subject-interests" value="Science" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
-                Science
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                <input type="checkbox" name="subject-interests" value="Commerce" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
-                Commerce
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                <input type="checkbox" name="subject-interests" value="Arts" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
-                Arts
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                <input type="checkbox" name="subject-interests" value="Engineering" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
-                Engineering
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                <input type="checkbox" name="subject-interests" value="Medical" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
-                Medical
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                <input type="checkbox" name="subject-interests" value="Design" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
-                Design
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                <input type="checkbox" name="subject-interests" value="Law" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
-                Law
-              </label>
-              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                <input type="checkbox" name="subject-interests" value="Computer Science" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
-                Computer Science
-              </label>
+            <div style="margin-bottom: 1rem;">
+              <label for="onboarding-pref-name" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Preferred / Nickname</label>
+              <input type="text" id="onboarding-pref-name" placeholder="How should we address you?" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label for="onboarding-gender" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Gender *</label>
+                <select id="onboarding-gender" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+              <div>
+                <label for="onboarding-dob" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Date of Birth *</label>
+                <input type="date" id="onboarding-dob" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div>
+                <label for="onboarding-phone" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Contact Number *</label>
+                <input type="tel" id="onboarding-phone" placeholder="e.g. +91 98765 43210" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+              </div>
+              <div>
+                <label for="onboarding-email" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Primary Email *</label>
+                <input type="email" id="onboarding-email" placeholder="you@example.com" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+              </div>
+            </div>
+
+            <!-- Address Group -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-bottom: 1rem;">
+              <h4 style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem;"><i data-lucide="map-pin" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 0.25rem;"></i> Residential Details</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                  <label for="onboarding-state" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">State *</label>
+                  <select id="onboarding-state" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                    <option value="">Select State</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="onboarding-district" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">District *</label>
+                  <input type="text" id="onboarding-district" placeholder="e.g. Hyderabad / Visakhapatnam" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                  <label for="onboarding-city" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">City / Town *</label>
+                  <input type="text" id="onboarding-city" placeholder="e.g. Warangal / Vijayawada" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+                </div>
+                <div>
+                  <label for="onboarding-pincode" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Pincode *</label>
+                  <input type="text" id="onboarding-pincode" placeholder="6-digit PIN" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Max Budget -->
-          <div style="margin-bottom: 1.25rem;">
-            <label for="profile-budget" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Max Budget (in ₹ Lakhs)</label>
-            <input type="number" id="profile-budget" value="8" min="0.1" step="0.1" placeholder="e.g. 8" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
+          <!-- ==========================================
+               STEP 2: ACADEMIC HISTORY
+               ========================================== -->
+          <div class="onboarding-step-pane" id="onboarding-pane-2" style="display: none;">
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Academic Profile</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Fill in your educational background so we can match you to historical cutoffs correctly.</p>
+
+            <div style="margin-bottom: 1rem;">
+              <label for="onboarding-school" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">School / College Name *</label>
+              <input type="text" id="onboarding-school" placeholder="e.g. Sri Chaitanya Junior College" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label for="onboarding-class" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Current Standard / Class *</label>
+                <select id="onboarding-class" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="">Select Option</option>
+                  <option value="12th Boards">12th Boards / Intermediate 2nd Year</option>
+                  <option value="11th Boards">11th Boards / Intermediate 1st Year</option>
+                  <option value="Diploma">Diploma / Polytechnic</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label for="onboarding-board" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Affiliation Board *</label>
+                <select id="onboarding-board" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="">Select Board</option>
+                  <option value="TSBIE">TSBIE (Telangana State Board)</option>
+                  <option value="BIEAP">BIEAP (Andhra Pradesh State Board)</option>
+                  <option value="CBSE">CBSE (Central Board)</option>
+                  <option value="ICSE">ICSE / ISC</option>
+                  <option value="Other">Other Board</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div>
+                <label for="onboarding-percentage" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Percentage / Board Marks (0-100) *</label>
+                <input type="number" id="onboarding-percentage" min="0" max="100" step="0.01" placeholder="e.g. 91.4" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required />
+              </div>
+              <div>
+                <label for="onboarding-grad-year" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Expected Graduation Year *</label>
+                <select id="onboarding-grad-year" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="2026">2026</option>
+                  <option value="2027">2027</option>
+                  <option value="2028">2028</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <!-- Preferred Location -->
-          <div style="margin-bottom: 2rem;">
-            <label for="profile-location" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Preferred Study Location <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-secondary);">(Optional)</span></label>
-            <input type="text" id="profile-location" placeholder="e.g. Mumbai, Bengaluru, Pune" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
+          <!-- ==========================================
+               STEP 3: EXAMS SELECTION
+               ========================================== -->
+          <div class="onboarding-step-pane" id="onboarding-pane-3" style="display: none;">
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Target Entrance Exams</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Select all competitive and national level entry exams you are preparing for or have appeared in.</p>
+
+            <div style="margin-bottom: 1rem;">
+              <div style="position: relative; display: flex; align-items: center; margin-bottom: 1rem;">
+                <i data-lucide="search" style="position: absolute; left: 0.875rem; color: var(--text-muted); width: 18px; height: 18px;"></i>
+                <input type="text" id="exam-search" oninput="filterExamsList()" placeholder="Search exams (e.g. JEE, NEET, EAPCET)..." style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; background-color: white; color: var(--text-primary); outline: none;" />
+              </div>
+              
+              <!-- Category quick filter pills -->
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem;" id="exam-category-filters">
+                <button type="button" class="nav-help-btn" onclick="setExamCategoryFilter('All')" style="font-size: 0.75rem; font-weight: 700; padding: 0.375rem 0.75rem;" id="exam-filter-all">All</button>
+                <button type="button" class="nav-help-btn" onclick="setExamCategoryFilter('Engineering')" style="font-size: 0.75rem; font-weight: 700; padding: 0.375rem 0.75rem;" id="exam-filter-engineering">Engineering</button>
+                <button type="button" class="nav-help-btn" onclick="setExamCategoryFilter('Medical')" style="font-size: 0.75rem; font-weight: 700; padding: 0.375rem 0.75rem;" id="exam-filter-medical">Medical</button>
+                <button type="button" class="nav-help-btn" onclick="setExamCategoryFilter('Law')" style="font-size: 0.75rem; font-weight: 700; padding: 0.375rem 0.75rem;" id="exam-filter-law">Law</button>
+                <button type="button" class="nav-help-btn" onclick="setExamCategoryFilter('Design')" style="font-size: 0.75rem; font-weight: 700; padding: 0.375rem 0.75rem;" id="exam-filter-design">Design</button>
+                <button type="button" class="nav-help-btn" onclick="setExamCategoryFilter('Management')" style="font-size: 0.75rem; font-weight: 700; padding: 0.375rem 0.75rem;" id="exam-filter-management">Management</button>
+                <button type="button" class="nav-help-btn" onclick="setExamCategoryFilter('Commerce')" style="font-size: 0.75rem; font-weight: 700; padding: 0.375rem 0.75rem;" id="exam-filter-commerce">Commerce</button>
+                <button type="button" class="nav-help-btn" onclick="setExamCategoryFilter('General')" style="font-size: 0.75rem; font-weight: 700; padding: 0.375rem 0.75rem;" id="exam-filter-general">General</button>
+              </div>
+
+              <!-- Selection Counter -->
+              <div style="font-size: 0.8125rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.75rem;" id="exam-selection-count">0 exams selected</div>
+
+              <!-- Grid of exam checklist items -->
+              <div id="exams-checkbox-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem; max-height: 250px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: var(--bg-app);">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
           </div>
 
-          <!-- Buttons -->
-          <div style="display: flex; gap: 1rem;">
-            <button type="button" id="onboarding-back-btn" onclick="cancelOnboarding()" style="flex: 1; padding: 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 1rem; font-weight: 600; color: var(--text-secondary); background: none; cursor: pointer; display: none;">Cancel</button>
-            <button type="submit" style="flex: 2; padding: 0.875rem; background-color: var(--color-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background-color 0.2s; outline: none;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">Save & Continue</button>
+          <!-- ==========================================
+               STEP 4: COLLEGE PREFERENCES
+               ========================================== -->
+          <div class="onboarding-step-pane" id="onboarding-pane-4" style="display: none;">
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">College Preferences</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Specify your targets so we can compute your perfect college admissions fit.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label for="onboarding-course" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Preferred Course *</label>
+                <select id="onboarding-course" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="">Select Course</option>
+                  <option value="Computer Science Engineering">Computer Science Engineering (CSE)</option>
+                  <option value="Electronics & Communication">Electronics & Communication (ECE)</option>
+                  <option value="Information Technology">Information Technology (IT)</option>
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                  <option value="Electrical Engineering">Electrical Engineering (EEE)</option>
+                  <option value="Medicine MBBS">Medicine (MBBS)</option>
+                  <option value="Corporate Law LLB">Law (B.A. LL.B.)</option>
+                  <option value="Business Administration BBA">Management (BBA)</option>
+                  <option value="Fashion Designing">Design (B.Des)</option>
+                </select>
+              </div>
+              <div>
+                <label for="onboarding-degree" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Preferred Degree *</label>
+                <select id="onboarding-degree" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="">Select Degree</option>
+                  <option value="B.Tech">B.Tech / B.E.</option>
+                  <option value="MBBS">MBBS / Dental</option>
+                  <option value="LL.B.">LL.B. / Integrated Law</option>
+                  <option value="BBA">BBA / BBM</option>
+                  <option value="B.Des">B.Des / B.Arch</option>
+                  <option value="B.Sc.">B.Sc. / Science</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Preferred States -->
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Preferred States * <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">(Select at least one)</span></label>
+              <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: var(--bg-app);">
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-states" value="Telangana" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
+                  Telangana
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-states" value="Andhra Pradesh" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
+                  Andhra Pradesh
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-states" value="Other" style="width: 1rem; height: 1rem; accent-color: var(--color-primary);" />
+                  Other States
+                </label>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label for="onboarding-pref-cities" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Preferred Cities <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
+                <input type="text" id="onboarding-pref-cities" placeholder="e.g. Hyderabad, Warangal" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" />
+              </div>
+              <div>
+                <label for="onboarding-budget-range" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Max Budget Limit *</label>
+                <select id="onboarding-budget-range" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="2">Under ₹2 Lakhs / Year</option>
+                  <option value="5">Under ₹5 Lakhs / Year</option>
+                  <option value="8" selected>Under ₹8 Lakhs / Year</option>
+                  <option value="12">Under ₹12 Lakhs / Year</option>
+                  <option value="25">No Limit</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label for="onboarding-college-type" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Preferred College Type *</label>
+                <select id="onboarding-college-type" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="Government">Government / Autonomous Only</option>
+                  <option value="Private">Private / Deemed Universities</option>
+                  <option value="Any" selected>Any Type</option>
+                </select>
+              </div>
+              <div>
+                <label for="onboarding-hostel" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Hostel Requirement *</label>
+                <select id="onboarding-hostel" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="Yes">Yes, Hostel Accommodation Required</option>
+                  <option value="No">No, Day Scholar</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div>
+                <label for="onboarding-campus-size" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Preferred Campus Size</label>
+                <select id="onboarding-campus-size" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;">
+                  <option value="Any" selected>Any Size</option>
+                  <option value="Large (100+ Acres)">Large (100+ Acres)</option>
+                  <option value="Medium (50-100 Acres)">Medium (50-100 Acres)</option>
+                  <option value="Compact (Under 50 Acres)">Compact (Under 50 Acres)</option>
+                </select>
+              </div>
+              <div>
+                <label for="onboarding-placement-priority" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Placement Priority *</label>
+                <select id="onboarding-placement-priority" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                  <option value="High" selected>High (100% placement track required)</option>
+                  <option value="Moderate">Moderate (Higher study priority)</option>
+                  <option value="Low">Low / Core Research Aligned</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label for="onboarding-scholarship-req" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Are you seeking Scholarship & Financial Aid? *</label>
+              <select id="onboarding-scholarship-req" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                <option value="Yes">Yes, looking for Fee Waiver / ePASS Schemes</option>
+                <option value="No">No, self-funded</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ==========================================
+               STEP 5: CAREER GOALS
+               ========================================== -->
+          <div class="onboarding-step-pane" id="onboarding-pane-5" style="display: none;">
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Career Goals & Ambitions</h3>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Help us line up corporate recruiter opportunities matching your dreams.</p>
+
+            <div style="margin-bottom: 1rem;">
+              <label for="onboarding-career-goal" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Primary Career Objective *</label>
+              <select id="onboarding-career-goal" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                <option value="">Select Career Path</option>
+                <option value="Software Engineer">Software Engineer / Tech Lead</option>
+                <option value="Data Scientist">Data Scientist & AI Practitioner</option>
+                <option value="Corporate lawyer">Corporate Lawyer / Counsel</option>
+                <option value="Civil Services">UPSC Civil Services / IAS / IPS</option>
+                <option value="Higher Studies">Research & Higher Studies (MS/PhD)</option>
+                <option value="Entrepreneurship">Founder / Startup Tech Co</option>
+              </select>
+            </div>
+
+            <!-- Preferred Companies -->
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Preferred Recruiter Brands <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">(Select multiple)</span></label>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background-color: var(--bg-app);">
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-companies" value="Google" style="width: 0.9375rem; height: 0.9375rem; accent-color: var(--color-primary);" />
+                  Google / Tech Giants
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-companies" value="Microsoft" style="width: 0.9375rem; height: 0.9375rem; accent-color: var(--color-primary);" />
+                  Microsoft
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-companies" value="Goldman Sachs" style="width: 0.9375rem; height: 0.9375rem; accent-color: var(--color-primary);" />
+                  Goldman Sachs / Finance
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-companies" value="Amazon" style="width: 0.9375rem; height: 0.9375rem; accent-color: var(--color-primary);" />
+                  Amazon
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-companies" value="TCS" style="width: 0.9375rem; height: 0.9375rem; accent-color: var(--color-primary);" />
+                  TCS / Consulting
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" name="onboarding-pref-companies" value="Deloitte" style="width: 0.9375rem; height: 0.9375rem; accent-color: var(--color-primary);" />
+                  Deloitte Digital
+                </label>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+              <label for="onboarding-study-abroad" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Are you planning to study abroad in the future? *</label>
+              <select id="onboarding-study-abroad" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; background-color: white; color: var(--text-primary); outline: none;" required>
+                <option value="No">No, planning fully in India</option>
+                <option value="Yes">Yes, aiming for US / UK MS programs later</option>
+                <option value="Undecided">Undecided / Maybe later</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Buttons Row -->
+          <div style="display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin-top: 1.5rem;">
+            <button type="button" id="onboarding-prev-btn" onclick="handleOnboardingPrev()" style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 700; color: var(--text-secondary); background: white; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f1f5f9'" onmouseout="this.style.backgroundColor='white'">
+              Back
+            </button>
+            <button type="button" id="onboarding-next-btn" onclick="handleOnboardingNext()" style="flex: 2; padding: 0.75rem; background-color: var(--color-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
+              <span>Next</span> <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+            </button>
           </div>
         </form>
       </div>
@@ -2039,63 +2336,89 @@
     <section id="auth-section" class="auth-section-overlay" style="display: none;">
       <div class="card auth-modal-card">
         <!-- Close button to dismiss the popup -->
-        <button type="button" onclick="showLandingOnly()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.25rem; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; outline: none;" onmouseover="this.style.backgroundColor='rgba(0,0,0,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+        <button type="button" onclick="showLandingOnly()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.25rem; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; outline: none; z-index: 10;" onmouseover="this.style.backgroundColor='rgba(0,0,0,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
           <i data-lucide="x" style="width: 20px; height: 20px;"></i>
         </button>
-        <div style="text-align: center; margin-bottom: 2rem;">
-          <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background-color: rgba(var(--color-primary-rgb), 0.1); color: var(--color-primary); margin-bottom: 1rem;">
-            <i data-lucide="shield-check" style="width: 24px; height: 24px;"></i>
+        
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background-color: rgba(var(--color-primary-rgb), 0.1); color: var(--color-primary); margin-bottom: 0.75rem;">
+            <i data-lucide="shield-check" style="width: 22px; height: 22px;"></i>
           </div>
-          <h2 id="auth-title" style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Welcome to Gettn Ngo</h2>
-          <p id="auth-subtitle" style="font-size: 0.9375rem; color: var(--text-secondary);">Secure your admissions and guidance roadmap.</p>
+          <h2 id="auth-title" style="font-family: var(--font-display); font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem;">Welcome to Gettn</h2>
+          <p id="auth-subtitle" style="font-size: 0.875rem; color: var(--text-secondary);">Secure your admissions and guidance roadmap.</p>
+        </div>
+
+        <div id="auth-social-container" style="margin-bottom: 1rem;">
+          <button type="button" onclick="handleSocialSignIn('google')" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 0.75rem; background-color: white; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; font-weight: 600; color: var(--text-primary); cursor: pointer; transition: all 0.2s; outline: none;" onmouseover="this.style.backgroundColor='#f8fafc'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.backgroundColor='white'; this.style.borderColor='var(--border-color)'">
+            <svg viewBox="0 0 24 24" style="width: 18px; height: 18px;" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22c-.87-2.6-2.86-4.53-6.16-4.53z" fill="#FBBC05" />
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+        </div>
+
+        <div id="auth-divider" style="display: flex; align-items: center; text-align: center; margin-bottom: 1rem; color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">
+          <div style="flex-grow: 1; height: 1px; background-color: var(--border-color);"></div>
+          <span style="padding: 0 0.75rem; text-transform: uppercase;">or continue with email</span>
+          <div style="flex-grow: 1; height: 1px; background-color: var(--border-color);"></div>
         </div>
 
         <form id="auth-form" onsubmit="handleAuthSubmit(event)" novalidate>
-          <div id="auth-error" style="display: none; background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.875rem; font-weight: 500;">
+          <div id="auth-error" style="display: none; background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.8125rem; font-weight: 500; line-height: 1.4;">
             <!-- Error messages go here -->
           </div>
 
           <!-- Full Name Field (Sign Up Only) -->
-          <div id="signup-name-group" style="display: none; margin-bottom: 1.25rem;">
-            <label for="auth-name" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Full Name *</label>
-            <input type="text" id="auth-name" placeholder="John Doe" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
+          <div id="signup-name-group" style="display: none; margin-bottom: 1rem;">
+            <label for="auth-name" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Full Name *</label>
+            <input type="text" id="auth-name" placeholder="John Doe" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
             <div id="auth-name-error" style="display: none; color: #ef4444; font-size: 0.75rem; font-weight: 500; margin-top: 0.25rem;"></div>
           </div>
 
           <!-- Date of Birth Field (Sign Up Only) -->
-          <div id="signup-dob-group" style="display: none; margin-bottom: 1.25rem;">
-            <label for="auth-dob" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Date of Birth *</label>
-            <input type="date" id="auth-dob" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
+          <div id="signup-dob-group" style="display: none; margin-bottom: 1rem;">
+            <label for="auth-dob" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Date of Birth *</label>
+            <input type="date" id="auth-dob" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
             <div id="auth-dob-error" style="display: none; color: #ef4444; font-size: 0.75rem; font-weight: 500; margin-top: 0.25rem;"></div>
           </div>
 
           <!-- Email Field -->
-          <div style="margin-bottom: 1.25rem;">
-            <label for="auth-email" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Email Address *</label>
-            <input type="email" id="auth-email" placeholder="you@example.com" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" required />
+          <div style="margin-bottom: 1rem;">
+            <label for="auth-email" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Email Address *</label>
+            <input type="email" id="auth-email" placeholder="you@example.com" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" required />
           </div>
 
           <!-- Password Field -->
-          <div style="margin-bottom: 1.25rem;">
-            <label for="auth-password" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Password *</label>
-            <input type="password" id="auth-password" placeholder="••••••••" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" required />
+          <div id="login-password-group" style="margin-bottom: 1rem;">
+            <label for="auth-password" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Password *</label>
+            <input type="password" id="auth-password" placeholder="••••••••" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" required />
           </div>
 
           <!-- Confirm Password Field (Sign Up Only) -->
-          <div id="signup-confirm-password-group" style="display: none; margin-bottom: 1.5rem;">
-            <label for="auth-confirm-password" style="display: block; font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Confirm Password *</label>
-            <input type="password" id="auth-confirm-password" placeholder="••••••••" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.9375rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
+          <div id="signup-confirm-password-group" style="display: none; margin-bottom: 1rem;">
+            <label for="auth-confirm-password" style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.375rem;">Confirm Password *</label>
+            <input type="password" id="auth-confirm-password" placeholder="••••••••" style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 0.875rem; font-family: var(--font-sans); background-color: var(--bg-app); color: var(--text-primary); outline: none;" />
             <div id="auth-confirm-password-error" style="display: none; color: #ef4444; font-size: 0.75rem; font-weight: 500; margin-top: 0.25rem;"></div>
           </div>
 
           <!-- Submit Buttons -->
-          <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
-            <button type="submit" id="auth-submit-btn" style="width: 100%; padding: 0.875rem; background-color: var(--color-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 700; cursor: pointer; transition: background-color 0.2s; outline: none;">
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+            <button type="submit" id="auth-submit-btn" style="width: 100%; padding: 0.75rem; background-color: var(--color-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: background-color 0.2s; outline: none;" onmouseover="this.style.backgroundColor='var(--color-primary-dark)'" onmouseout="this.style.backgroundColor='var(--color-primary)'">
               Sign In
             </button>
-            <button type="button" onclick="startGuestMode()" style="width: 100%; padding: 0.875rem; background-color: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px dashed #f59e0b; border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; outline: none;" onmouseover="this.style.backgroundColor='rgba(245, 158, 11, 0.15)'" onmouseout="this.style.backgroundColor='rgba(245, 158, 11, 0.1)'">
-              <i data-lucide="user-check" style="width: 16px; height: 16px;"></i> Explore as Guest (Demo Mode)
+            <button type="button" onclick="startGuestMode()" style="width: 100%; padding: 0.75rem; background-color: rgba(245, 158, 11, 0.08); color: #d97706; border: 1px dashed #f59e0b; border-radius: var(--radius-sm); font-size: 0.875rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.375rem; transition: all 0.2s; outline: none;" onmouseover="this.style.backgroundColor='rgba(245, 158, 11, 0.12)'" onmouseout="this.style.backgroundColor='rgba(245, 158, 11, 0.08)'">
+              <i data-lucide="user-check" style="width: 15px; height: 15px;"></i> Explore as Guest (Demo Mode)
             </button>
+          </div>
+          
+          <div id="auth-footer-container" style="border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.375rem; text-align: center; font-size: 0.8125rem;">
+              <a href="#" onclick="event.preventDefault(); setAuthModalMode('forgot')" style="color: var(--color-accent-dark); font-weight: 600; text-decoration: none;">Forgot Password?</a>
+              <span style="color: var(--text-secondary);">Don't have an account? <a href="#" onclick="event.preventDefault(); setAuthModalMode('signup')" style="color: var(--color-primary); font-weight: 700; text-decoration: underline;">Create Account</a></span>
+            </div>
           </div>
         </form>
       </div>
@@ -2252,6 +2575,10 @@
               <h3 class="card-title">My Profile Tracker</h3>
               <div id="profile-values-display" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
                 <div style="font-size: 0.9375rem;"><strong style="color: var(--text-primary);">Name:</strong> <span id="val-profile-name" style="color: var(--text-secondary);">—</span></div>
+                <div style="font-size: 0.9375rem;"><strong style="color: var(--text-primary);">DOB:</strong> <span id="val-profile-dob" style="color: var(--text-secondary);">—</span></div>
+                <div style="font-size: 0.9375rem;"><strong style="color: var(--text-primary);">Gender:</strong> <span id="val-profile-gender-val" style="color: var(--text-secondary);">—</span></div>
+                <div style="font-size: 0.9375rem;"><strong style="color: var(--text-primary);">Contact:</strong> <span id="val-profile-phone" style="color: var(--text-secondary);">—</span></div>
+                <div style="font-size: 0.9375rem;"><strong style="color: var(--text-primary);">State:</strong> <span id="val-profile-state-val" style="color: var(--text-secondary);">—</span></div>
                 <div style="font-size: 0.9375rem;"><strong style="color: var(--text-primary);">Exam:</strong> <span id="val-profile-exam" style="color: var(--text-secondary);">—</span></div>
                 <div style="font-size: 0.9375rem;"><strong style="color: var(--text-primary);">Marks:</strong> <span id="val-profile-marks" style="color: var(--text-secondary);">—</span></div>
                 <div style="font-size: 0.9375rem;"><strong style="color: var(--text-primary);">Interests:</strong> <span id="val-profile-interests" style="color: var(--text-secondary);">—</span></div>
@@ -2965,8 +3292,139 @@
         });
       }
 
+      // Onboarding Entrance Exams Dataset
+      const ALL_ENTRANCE_EXAMS = [
+        // Engineering
+        { id: "jee-main", name: "JEE Main (National B.Tech)", category: "Engineering" },
+        { id: "jee-adv", name: "JEE Advanced (IITs Admission)", category: "Engineering" },
+        { id: "ts-eapcet", name: "TS EAPCET (Telangana B.Tech)", category: "Engineering" },
+        { id: "ap-eapcet", name: "AP EAPCET (Andhra B.Tech)", category: "Engineering" },
+        { id: "bitsat", name: "BITSAT (BITS Pilani Admission)", category: "Engineering" },
+        { id: "viteee", name: "VITEEE (VIT B.Tech Entry)", category: "Engineering" },
+        
+        // Medical
+        { id: "neet-ug", name: "NEET UG (National MBBS/BDS)", category: "Medical" },
+        { id: "aiims-ug", name: "AIIMS Nursing/Para Entry", category: "Medical" },
+        { id: "ts-eapcet-agri", name: "TS EAPCET Agriculture/Medical", category: "Medical" },
+        { id: "ap-eapcet-agri", name: "AP EAPCET Agriculture/Pharmacy", category: "Medical" },
+
+        // Law
+        { id: "clat", name: "CLAT (National Law Universities)", category: "Law" },
+        { id: "ts-lawcet", name: "TS LAWCET (Telangana 3/5-yr LLB)", category: "Law" },
+        { id: "ap-lawcet", name: "AP LAWCET (Andhra 3/5-yr LLB)", category: "Law" },
+        { id: "lsat-india", name: "LSAT India (Private Law Colleges)", category: "Law" },
+
+        // Design
+        { id: "uceed", name: "UCEED (IIT B.Des)", category: "Design" },
+        { id: "nid-dat", name: "NID DAT (National Design Institutes)", category: "Design" },
+        { id: "nift", name: "NIFT (Fashion/Tech Design)", category: "Design" },
+
+        // Management
+        { id: "ipmat", name: "IPMAT (IIM Indore/Rohtak BBA+MBA)", category: "Management" },
+        { id: "set-general", name: "Symbiosis Entrance Test (BBA)", category: "Management" },
+        { id: "npat", name: "NMIMS NPAT (BBA/B.Com)", category: "Management" },
+
+        // Commerce
+        { id: "ca-foundation", name: "CA Foundation (ICAI Pathway)", category: "Commerce" },
+        { id: "cuet-commerce", name: "CUET UG - Commerce Specialization", category: "Commerce" },
+
+        // General
+        { id: "cuet-ug", name: "CUET UG (Central Universities)", category: "General" },
+        { id: "ipucet", name: "IPU CET (Delhi State Varsity)", category: "General" }
+      ];
+
+      // Onboarding Wizard State
+      let currentOnboardingStep = 1;
+      let onboardingSelectedExams = new Set();
+      let currentExamCategoryFilter = 'All';
+      let isEditingOnboarding = false;
+
+      // Render the entrance exams checklist in Step 3
+      function renderExamsChecklist() {
+        const grid = document.getElementById('exams-checkbox-grid');
+        if (!grid) return;
+
+        const searchQuery = document.getElementById('exam-search').value.toLowerCase().trim();
+        
+        let filtered = ALL_ENTRANCE_EXAMS;
+        if (currentExamCategoryFilter !== 'All') {
+          filtered = filtered.filter(exam => exam.category === currentExamCategoryFilter);
+        }
+        if (searchQuery) {
+          filtered = filtered.filter(exam => exam.name.toLowerCase().includes(searchQuery));
+        }
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.875rem;">No entrance exams matched your search.</div>`;
+          return;
+        }
+
+        let html = '';
+        filtered.forEach(exam => {
+          const isChecked = onboardingSelectedExams.has(exam.id);
+          html += `
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--text-primary); padding: 0.5rem; background-color: white; border: 1px solid ${isChecked ? 'rgba(var(--color-primary-rgb), 0.3)' : 'var(--border-color)'}; border-radius: var(--radius-sm); cursor: pointer; user-select: none; transition: all 0.2s; ${isChecked ? 'box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb), 0.2);' : ''}">
+              <input type="checkbox" name="onboarding-exams" value="${exam.id}" onchange="toggleExamSelection('${exam.id}')" ${isChecked ? 'checked' : ''} style="width: 0.9375rem; height: 0.9375rem; accent-color: var(--color-primary);" />
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-weight: 600;">${exam.name}</span>
+                <span style="font-size: 0.6875rem; color: var(--text-muted);">${exam.category}</span>
+              </div>
+            </label>
+          `;
+        });
+        grid.innerHTML = html;
+      }
+
+      function filterExamsList() {
+        renderExamsChecklist();
+      }
+
+      function setExamCategoryFilter(category) {
+        currentExamCategoryFilter = category;
+        
+        // Update styling of filter buttons
+        const categories = ['All', 'Engineering', 'Medical', 'Law', 'Design', 'Management', 'Commerce', 'General'];
+        categories.forEach(cat => {
+          const btn = document.getElementById(`exam-filter-${cat.toLowerCase()}`);
+          if (btn) {
+            if (cat === category) {
+              btn.style.backgroundColor = 'var(--color-primary)';
+              btn.style.color = 'white';
+              btn.style.borderColor = 'var(--color-primary)';
+            } else {
+              btn.style.backgroundColor = 'white';
+              btn.style.color = 'var(--text-secondary)';
+              btn.style.borderColor = 'var(--border-color)';
+            }
+          }
+        });
+
+        renderExamsChecklist();
+      }
+
+      function toggleExamSelection(examId) {
+        if (onboardingSelectedExams.has(examId)) {
+          onboardingSelectedExams.delete(examId);
+        } else {
+          onboardingSelectedExams.add(examId);
+        }
+        
+        // Update selection count display
+        const countSpan = document.getElementById('exam-selection-count');
+        if (countSpan) {
+          countSpan.textContent = `${onboardingSelectedExams.size} exam${onboardingSelectedExams.size === 1 ? '' : 's'} selected`;
+        }
+
+        // Re-render checklist to update box borders
+        renderExamsChecklist();
+      }
+
       // Show onboarding form
       function openOnboardingForm(isEditing) {
+        isEditingOnboarding = isEditing;
+        currentOnboardingStep = 1;
+        onboardingSelectedExams.clear();
+
         const errorDiv = document.getElementById('onboarding-error');
         if (errorDiv) errorDiv.style.display = 'none';
 
@@ -2974,35 +3432,126 @@
         if (landingView) landingView.style.display = 'none';
         document.getElementById('hero-section').style.display = 'none';
         document.getElementById('app-view').style.display = 'none';
+        
         const onboardingSec = document.getElementById('onboarding-section');
         onboardingSec.style.display = 'flex';
 
-        const backBtn = document.getElementById('onboarding-back-btn');
+        // Set up search and filter buttons
+        const searchInput = document.getElementById('exam-search');
+        if (searchInput) searchInput.value = '';
+        setExamCategoryFilter('All');
+
+        // Reset all steps visibility
+        for (let i = 1; i <= 5; i++) {
+          const pane = document.getElementById(`onboarding-pane-${i}`);
+          if (pane) pane.style.display = (i === 1) ? 'block' : 'none';
+        }
+
+        const onboardingForm = document.getElementById('onboarding-form');
 
         if (isEditing) {
-          if (backBtn) backBtn.style.display = 'block';
-          
           const profile = currentUserData.gettnngo_profile;
           if (profile) {
-            document.getElementById('profile-exam').value = profile.exam || '12th Boards';
-            document.getElementById('profile-percentage').value = profile.percentage !== undefined ? profile.percentage : '';
+            // Split profile name back into First Name and Last Name
+            let firstName = "";
+            let lastName = "";
+            if (profile.name) {
+              const parts = profile.name.trim().split(/\s+/);
+              firstName = parts[0] || "";
+              if (parts.length > 1) {
+                lastName = parts.slice(1).join(" ");
+              }
+            } else {
+              firstName = currentUserData.name || "";
+            }
+
+            document.getElementById('onboarding-first-name').value = firstName;
+            document.getElementById('onboarding-last-name').value = lastName;
+            document.getElementById('onboarding-pref-name').value = profile.prefName || '';
+            document.getElementById('onboarding-gender').value = profile.gender || '';
+            document.getElementById('onboarding-dob').value = profile.dob || currentUserData.dob || '';
+            document.getElementById('onboarding-phone').value = profile.phone || '';
+            document.getElementById('onboarding-email').value = profile.primaryEmail || '';
+            document.getElementById('onboarding-state').value = profile.state || '';
+            document.getElementById('onboarding-district').value = profile.district || '';
+            document.getElementById('onboarding-city').value = profile.city || '';
+            document.getElementById('onboarding-pincode').value = profile.pincode || '';
+
+            // Step 2 Academic
+            document.getElementById('onboarding-school').value = profile.school || '';
+            document.getElementById('onboarding-class').value = profile.class || profile.exam || '';
+            document.getElementById('onboarding-board').value = profile.board || profile.board12th || '';
+            document.getElementById('onboarding-percentage').value = profile.percentage !== undefined ? profile.percentage : '';
+            document.getElementById('onboarding-grad-year').value = profile.gradYear || '2026';
+
+            // Step 3 Exams
+            if (profile.selectedExams && Array.isArray(profile.selectedExams)) {
+              profile.selectedExams.forEach(id => onboardingSelectedExams.add(id));
+            }
+
+            // Step 4 Preferences
+            document.getElementById('onboarding-course').value = profile.preferredCourse || '';
+            document.getElementById('onboarding-degree').value = profile.preferredDegree || '';
             
-            // Pre-fill checkboxes
-            const interests = profile.interests || [];
-            const checkboxes = document.querySelectorAll('input[name="subject-interests"]');
-            checkboxes.forEach(cb => {
-              cb.checked = interests.includes(cb.value);
+            // Checkboxes preferred states
+            const prefStates = profile.preferredStates || [];
+            const stateCheckboxes = document.querySelectorAll('input[name="onboarding-pref-states"]');
+            stateCheckboxes.forEach(cb => {
+              cb.checked = prefStates.includes(cb.value);
             });
 
-            document.getElementById('profile-budget').value = profile.budget !== undefined ? profile.budget : 8;
-            document.getElementById('profile-location').value = profile.location || '';
+            document.getElementById('onboarding-pref-cities').value = profile.preferredCities || '';
+            document.getElementById('onboarding-budget-range').value = profile.budget !== undefined ? Math.round(profile.budget).toString() : '8';
+            document.getElementById('onboarding-college-type').value = profile.collegeType || 'Any';
+            document.getElementById('onboarding-hostel').value = profile.hostelRequirement || 'Yes';
+            document.getElementById('onboarding-campus-size').value = profile.campusSize || 'Any';
+            document.getElementById('onboarding-placement-priority').value = profile.placementPriority || 'High';
+            document.getElementById('onboarding-scholarship-req').value = profile.scholarshipReq || 'Yes';
+
+            // Step 5 Goals
+            document.getElementById('onboarding-career-goal').value = profile.careerGoal || '';
+            
+            const prefCompanies = profile.preferredCompanies || [];
+            const companyCheckboxes = document.querySelectorAll('input[name="onboarding-pref-companies"]');
+            companyCheckboxes.forEach(cb => {
+              cb.checked = prefCompanies.includes(cb.value);
+            });
+
+            document.getElementById('onboarding-study-abroad').value = profile.studyAbroad || 'No';
           }
         } else {
-          if (backBtn) backBtn.style.display = 'none';
           // Clear inputs for fresh onboarding
-          document.getElementById('onboarding-form').reset();
-          document.getElementById('profile-budget').value = 8;
+          if (onboardingForm) onboardingForm.reset();
+          
+          let firstName = "";
+          let lastName = "";
+          if (currentUserData.name) {
+            const parts = currentUserData.name.trim().split(/\s+/);
+            firstName = parts[0] || "";
+            if (parts.length > 1) {
+              lastName = parts.slice(1).join(" ");
+            }
+          }
+
+          document.getElementById('onboarding-first-name').value = firstName;
+          document.getElementById('onboarding-last-name').value = lastName;
+          document.getElementById('onboarding-dob').value = currentUserData.dob || '';
+          document.getElementById('onboarding-email').value = (window.auth && window.auth.currentUser && window.auth.currentUser.email) || '';
+          document.getElementById('onboarding-budget-range').value = '8';
         }
+
+        // Initialize exams list counter & checkboxes
+        const countSpan = document.getElementById('exam-selection-count');
+        if (countSpan) {
+          countSpan.textContent = `${onboardingSelectedExams.size} exam${onboardingSelectedExams.size === 1 ? '' : 's'} selected`;
+        }
+        renderExamsChecklist();
+
+        // Update progress bar
+        updateOnboardingProgress();
+
+        // Re-trigger Lucide icons in onboarding card
+        lucide.createIcons();
 
         // Scroll onboarding section into view
         onboardingSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3019,50 +3568,321 @@
         }
       }
 
-      function handleOnboardingSubmit(event) {
-        event.preventDefault();
+      function updateOnboardingProgress() {
+        const progressBar = document.getElementById('onboarding-progress-bar');
+        const stepBadge = document.getElementById('onboarding-step-badge');
+        const stepTitle = document.getElementById('onboarding-step-title');
+        const nextBtn = document.getElementById('onboarding-next-btn');
+        const prevBtn = document.getElementById('onboarding-prev-btn');
 
-        const errorDiv = document.getElementById('onboarding-error');
-        errorDiv.style.display = 'none';
-        errorDiv.innerHTML = '';
+        const percentage = currentOnboardingStep * 20;
+        if (progressBar) progressBar.style.width = `${percentage}%`;
+        if (stepBadge) stepBadge.textContent = `Step ${currentOnboardingStep} of 5`;
 
-        const name = currentUserData.name || "Student";
-        const exam = document.getElementById('profile-exam').value;
-        const percentageStr = document.getElementById('profile-percentage').value;
-        const percentage = parseFloat(percentageStr);
-        
-        const selectedCheckboxes = document.querySelectorAll('input[name="subject-interests"]:checked');
-        const interests = Array.from(selectedCheckboxes).map(cb => cb.value);
+        const stepTitles = [
+          "Personal Information",
+          "Academic Profile",
+          "Target Entrance Exams",
+          "College Preferences",
+          "Career & Ambitions"
+        ];
+        if (stepTitle) stepTitle.textContent = stepTitles[currentOnboardingStep - 1];
 
-        const budget = parseFloat(document.getElementById('profile-budget').value) || 8;
-        const location = document.getElementById('profile-location').value.trim();
+        // Configure Back Button
+        if (currentOnboardingStep === 1) {
+          if (isEditingOnboarding) {
+            prevBtn.textContent = "Cancel";
+          } else {
+            prevBtn.textContent = "Back";
+            // Disable or hide back button on step 1 for new users
+            prevBtn.style.opacity = '0.5';
+            prevBtn.style.cursor = 'not-allowed';
+          }
+        } else {
+          prevBtn.textContent = "Back";
+          prevBtn.style.opacity = '1';
+          prevBtn.style.cursor = 'pointer';
+        }
 
+        // Configure Next Button
+        if (currentOnboardingStep === 5) {
+          nextBtn.innerHTML = `<span>Complete Onboarding</span> <i data-lucide="check" style="width: 16px; height: 16px;"></i>`;
+        } else {
+          nextBtn.innerHTML = `<span>Next</span> <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>`;
+        }
+        lucide.createIcons();
+      }
+
+      function validateOnboardingStep(step) {
         const errors = [];
+        
+        if (step === 1) {
+          const firstName = document.getElementById('onboarding-first-name').value.trim();
+          const lastName = document.getElementById('onboarding-last-name').value.trim();
+          const gender = document.getElementById('onboarding-gender').value;
+          const dob = document.getElementById('onboarding-dob').value;
+          const phone = document.getElementById('onboarding-phone').value.trim();
+          const email = document.getElementById('onboarding-email').value.trim();
+          const state = document.getElementById('onboarding-state').value;
+          const district = document.getElementById('onboarding-district').value.trim();
+          const city = document.getElementById('onboarding-city').value.trim();
+          const pincode = document.getElementById('onboarding-pincode').value.trim();
 
-        if (percentageStr === '' || isNaN(percentage) || percentage < 0 || percentage > 100) {
-          errors.push("Percentage/Marks must be a valid number between 0 and 100.");
+          if (!firstName) errors.push("First Name is required.");
+          if (!lastName) errors.push("Last Name is required.");
+          if (!gender) errors.push("Gender selection is required.");
+          if (!dob) {
+            errors.push("Date of Birth is required.");
+          } else {
+            const dobDate = new Date(dob);
+            const today = new Date();
+            if (dobDate > today) {
+              errors.push("Date of Birth cannot be in the future.");
+            } else {
+              let age = today.getFullYear() - dobDate.getFullYear();
+              const m = today.getMonth() - dobDate.getMonth();
+              if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) {
+                age--;
+              }
+              if (age < 13) {
+                errors.push("You must be at least 13 years old to use Gettn.");
+              }
+            }
+          }
+          if (!phone) errors.push("Contact Number is required.");
+          if (!email) {
+            errors.push("Primary Email is required.");
+          } else {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!re.test(email)) errors.push("Please enter a valid email address.");
+          }
+          if (!state) errors.push("State of Residence is required.");
+          if (!district) errors.push("District is required.");
+          if (!city) errors.push("City/Town is required.");
+          if (!pincode) {
+            errors.push("Pincode is required.");
+          } else {
+            const cleanPin = pincode.replace(/\D/g, '');
+            if (cleanPin.length !== 6) errors.push("Pincode must be exactly 6 digits.");
+          }
+        }
+        else if (step === 2) {
+          const school = document.getElementById('onboarding-school').value.trim();
+          const classVal = document.getElementById('onboarding-class').value;
+          const board = document.getElementById('onboarding-board').value;
+          const percentageStr = document.getElementById('onboarding-percentage').value;
+          const percentage = parseFloat(percentageStr);
+
+          if (!school) errors.push("School/College Name is required.");
+          if (!classVal) errors.push("Current Standard/Class selection is required.");
+          if (!board) errors.push("Affiliation Board selection is required.");
+          if (percentageStr === '' || isNaN(percentage) || percentage < 0 || percentage > 100) {
+            errors.push("Board Marks/Percentage must be a valid number between 0 and 100.");
+          }
+        }
+        else if (step === 3) {
+          // Entrance Exams is optional. No structural blocking.
+        }
+        else if (step === 4) {
+          const course = document.getElementById('onboarding-course').value;
+          const degree = document.getElementById('onboarding-degree').value;
+          
+          const prefStateBoxes = document.querySelectorAll('input[name="onboarding-pref-states"]:checked');
+          const states = Array.from(prefStateBoxes).map(cb => cb.value);
+
+          if (!course) errors.push("Preferred Course selection is required.");
+          if (!degree) errors.push("Preferred Degree selection is required.");
+          if (states.length === 0) errors.push("Please select at least one preferred study state.");
+        }
+        else if (step === 5) {
+          const career = document.getElementById('onboarding-career-goal').value;
+          if (!career) errors.push("Primary Career Objective is required.");
         }
 
-        if (interests.length === 0) {
-          errors.push("Please select at least one subject interest.");
+        return errors;
+      }
+
+      function handleOnboardingPrev() {
+        const errorDiv = document.getElementById('onboarding-error');
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        if (currentOnboardingStep === 1) {
+          cancelOnboarding();
+          return;
         }
 
-        if (errors.length > 0) {
-          errorDiv.innerHTML = errors.join('<br>');
-          errorDiv.style.display = 'block';
+        currentOnboardingStep--;
+        
+        // Toggle Panes
+        for (let i = 1; i <= 5; i++) {
+          const pane = document.getElementById(`onboarding-pane-${i}`);
+          if (pane) pane.style.display = (i === currentOnboardingStep) ? 'block' : 'none';
+        }
+
+        updateOnboardingProgress();
+        document.getElementById('onboarding-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function handleOnboardingNext() {
+        const errorDiv = document.getElementById('onboarding-error');
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        // Validate active step
+        const errors = validateOnboardingStep(currentOnboardingStep);
+        if (errors && errors.length > 0) {
+          if (errorDiv) {
+            errorDiv.innerHTML = errors.join('<br>');
+            errorDiv.style.display = 'block';
+          }
           document.getElementById('onboarding-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
           return;
         }
 
+        // Auto-save progress feedback (visually pleasing trigger)
+        const autoSaveSpan = document.getElementById('onboarding-step-autosave');
+        if (autoSaveSpan) {
+          autoSaveSpan.innerHTML = `<i data-lucide="loader" class="animate-spin" style="width: 13px; height: 13px;"></i> Saving progress...`;
+          lucide.createIcons();
+          setTimeout(() => {
+            if (autoSaveSpan) autoSaveSpan.innerHTML = `<i data-lucide="cloud-check" style="width: 13px; height: 13px;"></i> Progress saved`;
+            lucide.createIcons();
+          }, 600);
+        }
+
+        // Proceed
+        if (currentOnboardingStep === 5) {
+          handleOnboardingSubmit();
+          return;
+        }
+
+        currentOnboardingStep++;
+
+        // Toggle Panes
+        for (let i = 1; i <= 5; i++) {
+          const pane = document.getElementById(`onboarding-pane-${i}`);
+          if (pane) pane.style.display = (i === currentOnboardingStep) ? 'block' : 'none';
+        }
+
+        updateOnboardingProgress();
+        document.getElementById('onboarding-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function handleOnboardingSubmit() {
+        // Collect and build full profile object
+        const firstName = document.getElementById('onboarding-first-name').value.trim();
+        const lastName = document.getElementById('onboarding-last-name').value.trim();
+        const name = `${firstName} ${lastName}`;
+        const prefName = document.getElementById('onboarding-pref-name').value.trim();
+        const gender = document.getElementById('onboarding-gender').value;
+        const dob = document.getElementById('onboarding-dob').value;
+        const phone = document.getElementById('onboarding-phone').value.trim();
+        const primaryEmail = document.getElementById('onboarding-email').value.trim();
+        const state = document.getElementById('onboarding-state').value;
+        const district = document.getElementById('onboarding-district').value.trim();
+        const city = document.getElementById('onboarding-city').value.trim();
+        const pincode = document.getElementById('onboarding-pincode').value.trim();
+
+        // Step 2
+        const school = document.getElementById('onboarding-school').value.trim();
+        const classVal = document.getElementById('onboarding-class').value;
+        const board = document.getElementById('onboarding-board').value;
+        const percentage = parseFloat(document.getElementById('onboarding-percentage').value);
+        const gradYear = document.getElementById('onboarding-grad-year').value;
+
+        // Step 3
+        const selectedExams = Array.from(onboardingSelectedExams);
+
+        // Step 4
+        const course = document.getElementById('onboarding-course').value;
+        const degree = document.getElementById('onboarding-degree').value;
+        
+        const prefStateBoxes = document.querySelectorAll('input[name="onboarding-pref-states"]:checked');
+        const preferredStates = Array.from(prefStateBoxes).map(cb => cb.value);
+        const preferredCities = document.getElementById('onboarding-pref-cities').value.trim();
+        const budget = parseFloat(document.getElementById('onboarding-budget-range').value) || 8;
+        const collegeType = document.getElementById('onboarding-college-type').value;
+        const hostelRequirement = document.getElementById('onboarding-hostel').value;
+        const campusSize = document.getElementById('onboarding-campus-size').value;
+        const placementPriority = document.getElementById('onboarding-placement-priority').value;
+        const scholarshipReq = document.getElementById('onboarding-scholarship-req').value;
+
+        // Step 5
+        const careerGoal = document.getElementById('onboarding-career-goal').value;
+        
+        const companyCheckboxes = document.querySelectorAll('input[name="onboarding-pref-companies"]:checked');
+        const preferredCompanies = Array.from(companyCheckboxes).map(cb => cb.value);
+        const studyAbroad = document.getElementById('onboarding-study-abroad').value;
+
+        // Dynamic fallback category matching for subject interests compatibility
+        const interests = [];
+        if (course.includes("Computer") || course.includes("Information")) {
+          interests.push("Computer Science");
+          interests.push("Engineering");
+        } else if (course.includes("Engineering") || course.includes("Electronics") || course.includes("Electrical") || course.includes("Mechanical") || course.includes("Civil")) {
+          interests.push("Engineering");
+          interests.push("Science");
+        } else if (course.includes("Medicine") || course.includes("MBBS")) {
+          interests.push("Medical");
+          interests.push("Science");
+        } else if (course.includes("Law")) {
+          interests.push("Law");
+          interests.push("Arts");
+        } else if (course.includes("Business") || course.includes("Management")) {
+          interests.push("Commerce");
+        } else if (course.includes("Design") || course.includes("Fashion")) {
+          interests.push("Design");
+          interests.push("Arts");
+        } else {
+          interests.push("Science");
+        }
+
         const profile = {
+          // Compatibility placeholders
           name,
-          exam,
+          dob,
+          gender,
+          phone,
+          state,
+          exam: classVal,
           percentage,
           interests,
           budget,
-          location
+          location: preferredCities || state,
+
+          // Deep Stepwise profile info
+          firstName,
+          lastName,
+          prefName,
+          primaryEmail,
+          district,
+          city,
+          pincode,
+          school,
+          class: classVal,
+          board,
+          board12th: board,
+          marks12th: percentage,
+          stream: "MPC",
+          gradYear,
+          selectedExams,
+          preferredCourse: course,
+          preferredDegree: degree,
+          preferredStates,
+          preferredCities,
+          collegeType,
+          hostelRequirement,
+          hostel: hostelRequirement === 'Yes' ? 'Yes' : 'No',
+          campusSize,
+          placementPriority,
+          scholarshipReq,
+          scholarshipRequired: scholarshipReq === 'Yes',
+          careerGoal,
+          preferredCompanies,
+          studyAbroad
         };
 
+        currentUserData.name = name;
+        currentUserData.dob = dob;
         currentUserData.gettnngo_profile = profile;
         saveUserDataToFirestore();
 
@@ -3075,6 +3895,9 @@
 
         // Go straight to dashboard
         switchTab('dashboard');
+
+        // Show successful completion feedback
+        showToast("Onboarding Completed! Dashboard customized with your preferences.");
       }
 
       function updateDashboardWithProfile(profile) {
@@ -3102,6 +3925,10 @@
 
         // Profile values display inside Tracker card
         const nameVal = document.getElementById('val-profile-name');
+        const dobVal = document.getElementById('val-profile-dob');
+        const genderVal = document.getElementById('val-profile-gender-val');
+        const phoneVal = document.getElementById('val-profile-phone');
+        const stateVal = document.getElementById('val-profile-state-val');
         const examVal = document.getElementById('val-profile-exam');
         const marksVal = document.getElementById('val-profile-marks');
         const interestsVal = document.getElementById('val-profile-interests');
@@ -3109,10 +3936,17 @@
         const locationVal = document.getElementById('val-profile-location');
 
         if (nameVal) nameVal.textContent = displayName;
-        if (examVal) examVal.textContent = profile.exam;
-        if (marksVal) marksVal.textContent = profile.percentage + "%";
-        if (interestsVal) interestsVal.textContent = profile.interests.join(', ');
-        if (budgetVal) budgetVal.textContent = "₹" + profile.budget + " Lakhs";
+        if (dobVal) dobVal.textContent = profile.dob || currentUserData.dob || "2008-06-15";
+        if (genderVal) genderVal.textContent = profile.gender || "Male";
+        if (phoneVal) phoneVal.textContent = profile.phone || "+91 98765 43210";
+        if (stateVal) stateVal.textContent = profile.state || "Telangana";
+        if (examVal) examVal.textContent = profile.exam || profile.board12th || "12th Boards";
+        if (marksVal) marksVal.textContent = (profile.percentage !== undefined ? profile.percentage : profile.marks12th || 88) + "%";
+        if (interestsVal) {
+          const interests = profile.interests || [profile.preferredCourse || "Computer Science"];
+          interestsVal.textContent = interests.join(', ');
+        }
+        if (budgetVal) budgetVal.textContent = "₹" + (profile.budget || 8) + " Lakhs";
         if (locationVal) locationVal.textContent = profile.location || "None Specified";
 
         // Budget display card
@@ -6232,15 +7066,17 @@
 
         if (profile) {
           const displayName = currentUserData.name || profile.name || "Student";
+          const examName = profile.exam || profile.board12th || "12th Boards";
+          const marksVal = profile.percentage !== undefined ? profile.percentage : (profile.marks12th || 88);
           block.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
               <div>
                 <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Active Credentials</div>
-                <div style="font-size: 0.9375rem; font-weight: 700; color: var(--text-primary);">${displayName} <span style="font-weight: normal; color: var(--text-secondary); font-size: 0.8125rem;">(${profile.exam})</span></div>
+                <div style="font-size: 0.9375rem; font-weight: 700; color: var(--text-primary);">${displayName} <span style="font-weight: normal; color: var(--text-secondary); font-size: 0.8125rem;">(${examName})</span></div>
               </div>
               <div style="text-align: right;">
                 <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Your Marks</div>
-                <div id="odds-profile-percentage-value" data-value="${profile.percentage}" style="font-size: 1.125rem; font-weight: 800; color: var(--color-primary); font-family: var(--font-mono);">${profile.percentage}%</div>
+                <div id="odds-profile-percentage-value" data-value="${marksVal}" style="font-size: 1.125rem; font-weight: 800; color: var(--color-primary); font-family: var(--font-mono);">${marksVal}%</div>
               </div>
             </div>
             <div style="margin-top: 0.75rem; border-top: 1px dashed var(--border-color); padding-top: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
