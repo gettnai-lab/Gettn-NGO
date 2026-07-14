@@ -3433,6 +3433,9 @@
         document.getElementById('hero-section').style.display = 'none';
         document.getElementById('app-view').style.display = 'none';
         
+        const authSection = document.getElementById('auth-section');
+        if (authSection) authSection.style.display = 'none';
+        
         const onboardingSec = document.getElementById('onboarding-section');
         onboardingSec.style.display = 'flex';
 
@@ -4556,6 +4559,22 @@
       }
 
       function openAuthScreen() {
+        const user = window.auth && window.auth.currentUser;
+        if (user && !window.isLoggingOut) {
+          if (currentUserData.gettnngo_profile) {
+            const landingView = document.getElementById('landing-view');
+            if (landingView) landingView.style.display = 'none';
+            document.getElementById('hero-section').style.display = 'none';
+            document.getElementById('onboarding-section').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('app-view').style.display = 'block';
+            switchTab('dashboard');
+          } else {
+            openOnboardingForm(false);
+          }
+          return;
+        }
+
         const landingView = document.getElementById('landing-view');
         if (landingView) landingView.style.display = 'block';
         const heroSection = document.getElementById('hero-section');
@@ -7677,6 +7696,13 @@
 
       // Transition from Landing Page directly to Discovery Search Grid
       function exploreAsGuest(tabId, optCourse) {
+        // Enforce mandatory onboarding for logged in users
+        const user = window.auth && window.auth.currentUser;
+        if (user && !currentUserData.gettnngo_profile) {
+          openOnboardingForm(false);
+          return;
+        }
+
         if (optCourse) {
           const courseSelect = document.getElementById('filter-course');
           if (courseSelect) {
