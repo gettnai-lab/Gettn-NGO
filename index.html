@@ -1397,6 +1397,89 @@
         transform: translateY(-4px);
         box-shadow: var(--shadow-md);
       }
+
+      /* ==========================================================================
+         RESPONSIVE ADAPTATION FOR PHONE & NARROW/SPLITSCREEN VIEWPORTS
+         ========================================================================== */
+      .auth-section-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 10000;
+        padding: 1.5rem;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+      }
+
+      .auth-modal-card {
+        max-width: 480px;
+        width: 100%;
+        box-shadow: var(--shadow-2xl);
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-card);
+        padding: 2.5rem;
+        border-radius: var(--radius-lg);
+        animation: slideUpFade 0.4s ease-out;
+        position: relative;
+      }
+
+      .onboarding-card {
+        max-width: 600px;
+        width: 100%;
+        padding: 2.5rem;
+        box-shadow: var(--shadow-lg);
+        background-color: var(--bg-card);
+        border-radius: var(--radius-lg);
+        animation: slideUpFade 0.4s ease-out;
+      }
+
+      /* Prevent any accidental horizontal scroll on mobile */
+      html, body, #landing-view, #app-view {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      @media (max-width: 768px) {
+        .landing-nav {
+          padding: 1rem !important;
+        }
+        .landing-nav-links .landing-nav-link {
+          display: none !important; /* Hide menu text links on mobile to prevent viewport stretching */
+        }
+        .landing-nav-links {
+          gap: 0.5rem !important;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .auth-section-overlay {
+          padding: 0.5rem !important;
+        }
+        .auth-modal-card {
+          padding: 1.5rem 1rem !important;
+        }
+        #auth-title {
+          font-size: 1.5rem !important;
+        }
+        #auth-subtitle {
+          font-size: 0.8125rem !important;
+        }
+        #auth-form input {
+          padding: 0.625rem 0.875rem !important;
+          font-size: 0.875rem !important;
+        }
+        #auth-form button, .auth-modal-card button {
+          padding: 0.625rem !important;
+          font-size: 0.875rem !important;
+        }
+        .onboarding-card {
+          padding: 1.5rem !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1828,7 +1911,7 @@
 
     <!-- Onboarding Form Section -->
     <section id="onboarding-section" style="display: none; min-height: 90vh; padding: 4rem 1.5rem; background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, var(--bg-app) 100%); align-items: center; justify-content: center;">
-      <div class="card" style="max-width: 600px; width: 100%; box-shadow: var(--shadow-xl); border: 1px solid var(--border-color); background-color: var(--bg-card); padding: 2.5rem; border-radius: var(--radius-lg); animation: slideUpFade 0.4s ease-out;">
+      <div class="card onboarding-card">
         <div style="text-align: center; margin-bottom: 2rem;">
           <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background-color: rgba(37, 99, 235, 0.1); color: var(--color-primary); margin-bottom: 1rem;">
             <i data-lucide="user" style="width: 24px; height: 24px;"></i>
@@ -1919,8 +2002,8 @@
     </section>
 
     <!-- Sign In / Create Account Section as Popup Modal Overlay -->
-    <section id="auth-section" style="display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 10000; padding: 1.5rem; align-items: center; justify-content: center; overflow-y: auto;">
-      <div class="card" style="max-width: 480px; width: 100%; box-shadow: var(--shadow-2xl); border: 1px solid var(--border-color); background-color: var(--bg-card); padding: 2.5rem; border-radius: var(--radius-lg); animation: slideUpFade 0.4s ease-out; position: relative;">
+    <section id="auth-section" class="auth-section-overlay" style="display: none;">
+      <div class="card auth-modal-card">
         <!-- Close button to dismiss the popup -->
         <button type="button" onclick="showLandingOnly()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.25rem; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; outline: none;" onmouseover="this.style.backgroundColor='rgba(0,0,0,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
           <i data-lucide="x" style="width: 20px; height: 20px;"></i>
